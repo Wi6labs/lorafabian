@@ -3,10 +3,18 @@
 #include <string.h>
 #include <strformat.h>
 
+
 static StrFormatResult
 write_str(void *user_data, const char *data, unsigned int len)
 {
-  if (len > 0) dbg_send_bytes((unsigned char*)data, len);
+  if (len > 0) {
+#ifdef USE_UART1_TRACE
+		uart1_write((char*)data, len);
+#endif
+
+	}
+
+
   return STRFORMAT_OK;
 }
 

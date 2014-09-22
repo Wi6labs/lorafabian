@@ -19,7 +19,7 @@
 #define __STM32F10x_NVIC_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f10x_map.h"
+#include "stm32f10x.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* NVIC Init Structure definition */

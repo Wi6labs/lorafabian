@@ -19,7 +19,7 @@
 #define __STM32F10x_DMA_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f10x_map.h"
+#include "stm32f10x.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* DMA Init structure definition */

@@ -6,7 +6,7 @@ SUBTARGET = CB
 
 ### Code common for all ARM CPUs
 
-CONTIKI_CPU_ARM=$(CONTIKI)/cpu/arm
+CONTIKI_CPU_ARM=$(CONTIKI)/cpu/arm/
 CONTIKI_CPU_ARM_COMMON=$(CONTIKI_CPU_ARM)/common
 
 ### Define the CPU directory
@@ -19,18 +19,33 @@ CONTIKI_CPU_DIRS = . ../common/dbg-io ../common/usb loader
 
 
 
-STM32F103     = clock.c debug-uart.c # interrupt-utils.c newlib-syscalls.c sys-interrupt.c rtimer-arch.c rtimer-arch-interrupt.c uip-log.c
+STM32F103     = clock.c startup_stm32f10x_md.S core_cm3.c stm32f10x_exti.c \
+		stm32f10x_rcc.c stm32f10x_gpio.c system_stm32f10x.c stm32f10x_usart.c stm32f10x_i2c.c stm32f10x_adc.c delay.c\
+		stm32f10x_iwdg.c stm32f10x_wwdg.c stm32f10x_tim.c stm32f10x_rtc.c stm32f10x_spi.c misc.c \
+		stm32f10x_flash.c stm32f10x_pwr.c stm32f10x_bkp.c stm32f10x_dbgmcu.c watchdog.c\
+    # uip-log.c # debug-uart.c interrupt-utils.c newlib-syscalls.c sys-interrupt.c rtimer-arch.c rtimer-arch-interrupt.c uip-log.c 
 
 # SYSAPPS = codeprop-otf.c
 # APPDIRS += $(CONTIKI)/cpu/at91sam7s/loader
 
 # ELFLOADER = elfloader-otf.c elfloader-arm.c symtab.c cfs-ram.c
 
-include $(CONTIKI_CPU_ARM_COMMON)/usb/Makefile.usb
+ifeq ($(USE_USBCDC_TRACE),1)
+include $(CONTIKI)/cpu/arm/common/usb/Makefile.usb
+else
+    ifeq ($(USE_USBCDC_TRACE_FOR_WIRISH),1)
+        include $(CONTIKI)/cpu/arm/common/usb/Makefile.usb
+    endif
+endif
 
-include $(CONTIKI_CPU_ARM_COMMON)/SD-card/Makefile.sdcard
+#include $(CONTIKI_CPU_ARM_COMMON)/SD-card/Makefile.sdcard
 
-TARGETLIBS = random.c dbg-printf.c dbg-puts.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c
+#for an unknown reason problem of link in C++ with dbg-printf.c and dbg-puts.c. Those latter allow to get rid of LIBC
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+TARGETLIBS = random.c #dbg-printf.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c #dbg-puts.c
+else
+TARGETLIBS = random.c dbg-printf.c dbg-putchar.c dbg-sprintf.c dbg-snprintf.c strformat.c dbg-puts.c
+endif
 
 CONTIKI_TARGET_SOURCEFILES += $(STM32F103) $(SYSAPPS) $(ELFLOADER) \
 			$(TARGETLIBS) $(UIPDRIVERS) $(USB)
@@ -38,28 +53,90 @@ CONTIKI_TARGET_SOURCEFILES += $(STM32F103) $(SYSAPPS) $(ELFLOADER) \
 CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 
 
+CONTIKI_PLATFORM_DIRS = $(PLATFORM_APPDIRS) \
+	 $(addprefix -I,$(CONTIKI)/platform/$(TARGET)/, $(CONTIKI_TARGET_DIRS))
+
+
 THREADS =
 
 ### Compiler definitions
-CC       = arm-elf-gcc
-LD       = arm-elf-ld
-AS       = arm-elf-as
-AR       = arm-elf-ar
-NM       = arm-elf-nm
-OBJCOPY  = arm-elf-objcopy
-STRIP    = arm-elf-strip
+CC       = arm-none-eabi-gcc
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+CXX      = arm-none-eabi-g++
+endif
+LD       = arm-none-eabi-ld
+AS       = arm-none-eabi-as
+AR       = arm-none-eabi-ar
+NM       = arm-none-eabi-nm
+OBJCOPY  = arm-none-eabi-objcopy
+STRIP    = arm-none-eabi-strip
+
+TOOLCHAIN_DIR := $(shell dirname `which $(CC)`)/../$(PREFIX)
 
 XSLTPROC=xsltproc
 
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.cpp=.o)}
+else
 PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,$(CONTIKI_TARGET_MAIN:.c=.o)}
+endif
 
-LINKERSCRIPT = $(CONTIKI_CPU)/STM32F103$(SUBTARGET).ld
+ifeq ($(DFU_BOOTLD_USED),1)
+LINKERSCRIPT = $(CONTIKI_CPU)/stm32_flash_dfu.ld
+else
+LINKERSCRIPT = $(CONTIKI_CPU)/stm32_flash.ld
+endif
 
-STARTUP=${addprefix $(OBJECTDIR)/,startup-STM32F10x.o}
+#ifdef COFFEE_ADDRESS
+ COFFEE = 1
+#endif
+
+# Default values for coffee section start.
+ifndef COFFEE_ADDRESS
+ COFFEE_ADDRESS = 0x08010C00
+endif
+
+ifeq ($(COFFEE),1)
+ CONTIKI_TARGET_SOURCEFILES += cfs-coffee.c cfs-coffee-arch.c
+ CFLAGS += -DCOFFEE_ADDRESS=$(COFFEE_ADDRESS)
+ 
+ #If $make invokation passed starting address use phony target to force synchronization of source to .coffeefiles section
+ #Warning: recompilation will not be forced if the starting address is then dropped, with dire consequences:
+ # -->Source that uses COFFEE_FILES and read macros for conditional compilation will be left hanging!
+ # -->Object modules that used .coffeefiles will overlap the .data section.
+ # -->$make clean is safest.
+#ifeq ($(origin COFFEE_ADDRESS), command line)
+# ifeq ($(COFFEE_FILES), 2)      #safest to force recompilation even if eeprom address is changed, might have been switched from flash
+   .PHONY : coffee
+   coffee:
+   $(OBJECTDIR)/cfs-coffee-arch.o    : coffee      #cfs-coffee-arch uses COFFEE_FILES, COFFEE_ADDRESS
+   $(OBJECTDIR)/cfs-coffee.o         : coffee      #core routine requires recompilation
+
+else
+ # Coffee starts at the end of the flash, before NVM section.
+ COFFEE_ADDRESS = 0x801F800
+endif
+
+
+ifndef IAR
+
+LDFLAGS+= -Wl,--section-start=.coffee=$(COFFEE_ADDRESS)
+
+else #IAR
+
+ ifeq ($(COFFEE),1)
+  LDFLAGS+= --config $(CONTIKI_CPU)/iar-cfg-coffee.icf
+ endif
+ 
+endif
+
+
+#STARTUP=${addprefix $(OBJECTDIR)/,startup-STM32F10x.o}
+STARTUP = startup_stm32f10x_md.o
 
 # JTAG program upload
 OPENOCD	 = openocd
-OPENOCD_DIR = $(CONTIKI_CPU_ARM)/openocd/ 
+OPENOCD_DIR = $(CONTIKI_CPU_ARM)/openocd/
 OPENOCD_CFG = arm7_wig.cfg
 
 # USB program upload
@@ -69,17 +146,31 @@ SAMIAM_TTY=/dev/ttyACM0
 # Use OpenOCD by default
 PROG=openocd
 
-ARCH_FLAGS= -march=armv7-m -mthumb
+ARCH_FLAGS= -mcpu=cortex-m3 -mthumb -msoft-float
 
 CFLAGSNO = -I. -I$(CONTIKI)/core -I$(CONTIKI_CPU) -I$(CONTIKI_CPU)/loader \
 	   -I$(CONTIKI_CPU)/dbg-io \
-           -I$(CONTIKI)/platform/$(TARGET) \
-           ${addprefix -I,$(APPDIRS)} \
-           -DWITH_UIP -DWITH_ASCII -DMCK=$(MCK) \
-           -Wall $(ARCH_FLAGS) -g -D SUBTARGET=$(SUBTARGET)
+     -I$(CONTIKI_PLATFORM_DIRS) \
+      ${addprefix -I,$(APPDIRS)} \
+      -DWITH_UIP -DWITH_ASCII -DMCK=$(MCK) \
+      -Wall $(ARCH_FLAGS) -g -D SUBTARGET=$(SUBTARGET)
 
-CFLAGS  += $(CFLAGSNO) -O -DRUN_AS_SYSTEM -DROM_RUN
-LDFLAGS += -L $(CONTIKI_CPU) -T $(LINKERSCRIPT) -nostartfiles
+FOO = $(CONTIKI_PLATFORM_DIRS)
+
+CFLAGS  += $(CFLAGSNO) -Os -g -DRUN_AS_SYSTEM -DROM_RUN \
+	-Wall \
+	-I$(TOOLCHAIN_DIR)/include \
+	-fno-common $(ARCH_FLAGS) -MD -DSTM32F1
+
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+CXXFLAGS = -fno-rtti -fno-exceptions -Wall
+endif
+
+LDFLAGS += -L $(CONTIKI_CPU) -T $(LINKERSCRIPT) -nostartfiles \
+	--static -Wl,--start-group -lc -lgcc -Wl,--end-group \
+	-L$(TOOLCHAIN_DIR)/lib \
+	-Wl,--gc-sections \
+	$(ARCH_FLAGS) -mfix-cortex-m3-ldrd
 
 CDEPFLAGS = $(CFLAGS) -D __MAKING_DEPS__
 
@@ -91,10 +182,27 @@ CDEPFLAGS = $(CFLAGS) -D __MAKING_DEPS__
 CUSTOM_RULE_C_TO_OBJECTDIR_O=yes
 CUSTOM_RULE_C_TO_O=yes
 
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+
+# acl rule to make o from c++
+# note that rules for link may be needed to handle C++ files
+
+%.o: %.cpp
+	$(CXX) $(CFLAGS) $< -c
+
+# acl change 21/03/2014
+#$(OBJECTDIR)/%.o: %.cpp
+#	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(OBJECTDIR)/%.o: %.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -MMD -MP -MF $(@:%.o=%.d) -MT $@ -o $@ -c $<
+
+endif
+
 %.o: %.c
 	$(CC) $(CFLAGS) $< -c
 
-$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+$(OBJECTDIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
@@ -102,14 +210,26 @@ CUSTOM_RULE_S_TO_OBJECTDIR_O = yes
 %.o: %.S
 	$(CC) $(CFLAGS) $< -c
 
-$(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
+$(OBJECTDIR)/%.o: %.S
 	$(CC) $(CFLAGS) $< -c  -o $@
 
 
 CUSTOM_RULE_C_TO_CO=yes
 
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+
+#acl change to generate *.co from cpp and not from c
+
+#acl 05/03
+#%.co: %.c
+#	$(CC) $(CFLAGS) $< -c -o $@
+
+%.co: %.cpp
+	$(CC) $(CFLAGS) $< -c -o $@
+else
 %.co: %.c
 	$(CC) $(CFLAGS) $< -c -o $@
+endif
 
 CUSTOM_RULE_C_TO_CE=yes
 
@@ -129,20 +249,36 @@ CUSTOM_RULE_LINK=yes
 %.o: ${CONTIKI_TARGET}/loader/%.S
 	$(AS) -o $(notdir $(<:.S=.o)) $<
 
+
+#acl 05/03
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+%-nosyms.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) # $(OBJECTDIR)/empty-symbols.o
+	$(CXX) $(LDFLAGS) $(CFLAGS) $(CXXFLAGS) -v -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
+	$(OBJCOPY) -O ihex $@ $(CONTIKI_PROJECT).hex
+	$(OBJCOPY) -O binary $@ $(CONTIKI_PROJECT).bin
+else
 %-nosyms.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) # $(OBJECTDIR)/empty-symbols.o
 	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
+	$(OBJCOPY) -O ihex $@ $(CONTIKI_PROJECT).hex
+	$(OBJCOPY) -O binary $@ $(CONTIKI_PROJECT).bin
+endif
 
+#I don't know why the makefile not excute these lines
+# %.hex: %.$(TARGET)
+# 	$(OBJCOPY) $^ -O ihex $@
 
-%.ihex: %.$(TARGET)
-	$(OBJCOPY) $^ -O ihex $@
+# %.bin: %.$(TARGET)
+# 	$(OBJCOPY) -O binary $< $@
 
-%.bin: %.$(TARGET)
-	$(OBJCOPY) -O binary $< $@
- 
 .PHONY: symbols.c
 ifdef CORE
+ifeq ($(USE_CPLUS_PLUS_COMPILATION),1)
+%.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) $(OBJECTDIR)/symbols.o
+	$(CXX) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
+else
 %.$(TARGET): %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a $(STARTUP) $(OBJECTDIR)/symbols.o
 	$(CC) $(LDFLAGS) $(CFLAGS) -nostartfiles -o $@ $(filter-out %.a,$^) $(filter %.a,$^) -lc $(filter %.a,$^)
+endif
 
 symbols.c: $(CORE)
 	$(NM) $< | awk -f $(CONTIKI_CPU)/builtins.awk -f ../../tools/mknmlist > symbols.c
@@ -175,7 +311,7 @@ ocd_reset:
 	$(OPENOCD) -s $(OPENOCD_DIR) -f $(OPENOCD_CFG) -c init -c "reset halt;resume" -c exit
 
 # Don't use core/loader/elfloader.c, use elfloader-otf.c instead
-$(OBJECTDIR)/elfloader.o: | $(OBJECTDIR)
+$(OBJECTDIR)/elfloader.o: 
 	echo -n >$@
 
 clean: clean_cpu

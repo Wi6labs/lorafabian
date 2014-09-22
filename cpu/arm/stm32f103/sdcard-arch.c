@@ -1,4 +1,4 @@
-#include <stm32f10x_map.h>
+#include <stm32f10x.h>
 #include <sdcard.h>
 #include <sys/process.h>
 #include <sys/etimer.h>
@@ -315,9 +315,9 @@ PROCESS_THREAD(sdcard_process, ev , data)
 	    if (event_process) {
 	      process_post(event_process, sdcard_inserted_event, NULL);
 	    }
-	    printf("SD card inserted\n");
+	    //printf("SD card inserted\n");
 	  } else {
-	    printf("SD card insertion failed\n");
+	    //printf("SD card insertion failed\n");
 	  }
 	}
       } else {
@@ -328,7 +328,7 @@ PROCESS_THREAD(sdcard_process, ev , data)
 	  if (event_process) {
 	    process_post(event_process, sdcard_removed_event, NULL);
 	  }
-	  printf("SD card removed\n");
+	  //printf("SD card removed\n");
 	}
       }
       etimer_set(&timer, CLOCK_SECOND);

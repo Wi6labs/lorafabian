@@ -52,6 +52,7 @@ SECTIONS
     __bss_start__ = . ;
     *(.bss)
     *(COMMON)
+    _ebss = .;
     __bss_end = . ;	
     __bss_end__ = . ;
     *(.noinit)

@@ -71,6 +71,8 @@ typedef enum {ERROR = 0, SUCCESS = !ERROR} ErrorStatus;
 #define S32_MAX    ((s32)2147483647)
 #define S32_MIN    ((s32)-2147483648)
 
+
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */

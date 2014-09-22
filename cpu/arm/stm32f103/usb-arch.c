@@ -1,16 +1,23 @@
 #include <usb-arch.h>
 #include <gpio.h>
-#include <nvic.h>
+//#include <nvic.h>
+#include <stm32f10x_nvic.h>
+#include <core_cm3.h>
 #include <stdio.h>
 #include <debug-uart.h>
 #include <usb-stm32f103.h>
+#include "stm32f10x_gpio.h"
 
-/* #define DEBUG     */
+//#define DEBUG
 #ifdef DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINTFD(...) //printf(__VA_ARGS__)
 #else
-#define PRINTF(...)
+#define PRINTFD(...)
 #endif
+
+static unsigned int sleep_cmp;
+
+
 typedef struct
 {
   vu32 EPR[8];
@@ -199,12 +206,16 @@ DOUBLE				0	0	1
 #define EP_HW_NUM(addr) ((addr) & 0x7f)
 
 #define USB_DISABLE_INT \
-  NVIC_DISABLE_INT(USB_LP_CAN_RX0_IRQChannel);\
-  NVIC_DISABLE_INT(USB_HP_CAN_TX_IRQChannel)
+  NVIC_DisableIRQ(USB_LP_CAN_RX0_IRQChannel);\
+  NVIC_DisableIRQ(USB_HP_CAN_TX_IRQChannel)
+/*  NVIC_DISABLE_INT(USB_LP_CAN_RX0_IRQChannel);\
+  NVIC_DISABLE_INT(USB_HP_CAN_TX_IRQChannel)*/
 
 #define USB_ENABLE_INT \
-  NVIC_ENABLE_INT(USB_LP_CAN_RX0_IRQChannel);\
-  NVIC_ENABLE_INT(USB_HP_CAN_TX_IRQChannel)
+  NVIC_EnableIRQ(USB_LP_CAN_RX0_IRQChannel);\
+  NVIC_EnableIRQ(USB_HP_CAN_TX_IRQChannel)
+/*  NVIC_ENABLE_INT(USB_LP_CAN_RX0_IRQChannel);\
+  NVIC_ENABLE_INT(USB_HP_CAN_TX_IRQChannel)*/
 
 static inline uint32_t
 usb_save_disable_int()
@@ -243,6 +254,29 @@ notify_ep_process(USBEndpoint *ep, unsigned int e)
   }
 }
 
+/*
+ *  USB Device Suspend Function
+ *   Called automatically on USB Device Suspend
+ *    Return Value:    None
+ */
+void usb_arch_suspend(void) {
+  USB->CNTR |= USB_CNTR_FSUSP;                   /* Force Suspend                      */
+  USB->CNTR |= USB_CNTR_LP_MODE;                  /* Low Power Mode                     */
+}
+
+/*
+ *  USB Device Remote Wakeup Function
+ *   Called automatically on USB Device Remote Wakeup
+ *    Return Value:    None
+ */
+
+void usb_arch_WakeUp (void) {
+  USB->CNTR &= ~USB_CNTR_FSUSP;     /* Clear Suspend */
+  USB->CNTR |= USB_CNTR_RESUME;
+}
+
+
+
 
 static void
 usb_arch_reset(void)
@@ -253,8 +287,8 @@ usb_arch_reset(void)
       USBBuffer *buffer = usb_endpoints[e].buffer;
       usb_endpoints[e].flags = 0;
       while(buffer) {
-	buffer->flags &= ~USB_BUFFER_SUBMITTED;
-	buffer = buffer->next;
+	      buffer->flags &= ~USB_BUFFER_SUBMITTED;
+	      buffer = buffer->next;
       }
     }
   }
@@ -267,21 +301,30 @@ usb_arch_setup(void)
 {
   unsigned int i;
   RCC->APB1RSTR |= RCC_APB1RSTR_USBRST;
-  RCC->APB2ENR |=  (RCC_APB2ENR_AFIOEN | RCC_APB2ENR_IOPAEN);
+  //RCC->APB2ENR |=  (RCC_APB2ENR_AFIOEN | RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPCEN);//???
+  RCC->APB2ENR |=  (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPCEN);
   RCC->APB1ENR |= (RCC_APB1ENR_USBEN);
   RCC->APB1RSTR &= ~RCC_APB1RSTR_USBRST;
 
-  GPIO_CONF_OUTPUT_PORT(A,11,ALT_PUSH_PULL,50);
-  GPIO_CONF_OUTPUT_PORT(A,12,ALT_PUSH_PULL,50);
-  GPIO_CONF_OUTPUT_PORT(A,10, PUSH_PULL, 2);
-  GPIOA->BSRR = GPIO_BSRR_BR10;
+  //GPIO_CONF_OUTPUT_PORT(A,11,ALT_PUSH_PULL,50);
+  //GPIO_CONF_OUTPUT_PORT(A,12,ALT_PUSH_PULL,50);
+
+  GPIO_CONF_OUTPUT_PORT(C,12, OPEN_DRAIN, 10);
+
+  //GPIOC->BSRR = GPIO_BSRR_BS12;
+
+  GPIO_CONF_INPUT_PORT(C,11, FLOATING);//PUSH_PULL);
+
+  /*reset*/
+  USB->CNTR |= USB_CNTR_FRES;
 
   /* Turn on analog part */
   USB->CNTR &= ~USB_CNTR_PDWN;
-  
-  for (i = 0; i < 24; i++) asm("nop"::); /* Wait at least 1us */
+  for (i = 0; i < 100; i++) asm("nop"::); /* Wait at least 1us */
+
   /* Release reset */
   USB->CNTR &= ~USB_CNTR_FRES;
+
   /* Clear any interrupts */
   USB->ISTR = ~(USB_ISTR_PMAOVR |USB_ISTR_ERR | USB_ISTR_WKUP | USB_ISTR_SUSP
 		| USB_ISTR_RESET);
@@ -293,11 +336,20 @@ usb_arch_setup(void)
   /* Put buffer table at beginning of buffer memory */
   USB->BTABLE = 0;
   usb_arch_reset();
-  GPIOA->BSRR = GPIO_BSRR_BS10;
+
+  //GPIOC->BSRR = GPIO_BSRR_BS12;
+
   USB->CNTR |= (USB_CNTR_CTRM | USB_CNTR_PMAOVRM | USB_CNTR_ERRM
 		| USB_CNTR_WKUPM| USB_CNTR_SUSPM | USB_CNTR_RESETM);
-  NVIC_SET_PRIORITY(USB_LP_CAN_RX0_IRQChannel, 4);
-  NVIC_ENABLE_INT(USB_LP_CAN_RX0_IRQChannel);
+
+  NVIC_SetPriority(USB_LP_CAN_RX0_IRQChannel, 4);
+  
+  NVIC_EnableIRQ(USB_LP_CAN_RX0_IRQChannel);
+  //NVIC_ENABLE_INT(USB_LP_CAN_RX0_IRQChannel);
+
+  /*present to host*/
+  GPIOC->BSRR = GPIO_BSRR_BR12;
+  GPIO_WriteBit(GPIOC, 12, 1);
 }
 
 #define EPR_RW (USB_EP0R_EP_TYPE|USB_EP0R_EP_KIND|USB_EP0R_EA)
@@ -446,7 +498,7 @@ stall_bulk_in(unsigned int hw_ep)
 {
   volatile uint32_t *eprp = &USB->EPR[hw_ep];
   *eprp = (*eprp & (EPR_RW | USB_EP0R_STAT_TX_1)) | EPR_W0;
-  PRINTF("HALT IN\n");
+  PRINTFD("HALT IN\n");
 }
 
 inline void
@@ -454,7 +506,7 @@ stall_bulk_out(unsigned int hw_ep)
 {
   volatile uint32_t *eprp = &USB->EPR[hw_ep];
   *eprp = (*eprp & ((EPR_RW | USB_EP0R_STAT_RX_1) & ~USB_EP0R_CTR_RX)) |EPR_W0;
-  PRINTF("HALT OUT\n");
+  PRINTFD("HALT OUT\n");
 }
 
 
@@ -576,7 +628,7 @@ handle_pending_receive(USBEndpoint *ep)
   USBBuffer *buffer = ep->buffer;
   unsigned int flags = ep->flags;
   USB_HW_Buffer *buf_desc = USB_EP_BUF_DESC(hw_ep);
-  PRINTF("handle_pending_receive:\n"); 
+  PRINTFD("handle_pending_receive:\n"); 
   if (!(flags & USB_EP_FLAGS_ENABLED) || !buffer) return USB_READ_BLOCK;
   switch(flags & USB_EP_FLAGS_TYPE_MASK) {
   case USB_EP_FLAGS_TYPE_CONTROL:
@@ -861,13 +913,14 @@ start_transfer(USBEndpoint *ep)
       return;
     }
   }
-  if (ep->addr == 0x02)
-    PRINTF("start EPR: %04x ep->flags: %02x\n",
+  if (ep->addr == 0x02) {
+    /*PRINTF("start EPR: %04x ep->flags: %02x\n",
 	   (unsigned int)USB->EPR[EP_HW_NUM(ep->addr)],
-	   (unsigned int)ep->flags);
+	   (unsigned int)ep->flags);*/
+      }
   if (ep->flags & (USB_EP_FLAGS_TRANSMITTING | USB_EP_FLAGS_RECEIVING)) {
     if (!IS_BULK_EP(ep) || (ep->flags & USB_EP_FLAGS_DOUBLE)) {
-      PRINTF("Busy\n");
+      PRINTFD("Busy\n");
       return;
     }
   }
@@ -890,9 +943,9 @@ transfer_complete(unsigned int hw_ep) {
   uint32_t epr =  USB->EPR[hw_ep];
   USBEndpoint *ep = &usb_endpoints[hw_ep];
   if (epr &USB_EP0R_CTR_RX) {
-    PRINTF("Received packet %lx %04x\n", USB_EP_BUF_DESC(hw_ep)->COUNT_RX, (int)USB->EPR[hw_ep]);
+    PRINTFD("Received packet %lx %04x\n", USB_EP_BUF_DESC(hw_ep)->COUNT_RX, (int)USB->EPR[hw_ep]);
     if (epr & USB_EP0R_SETUP) {
-      PRINTF("SETUP\n"); 
+      PRINTFD("SETUP\n"); 
       ep->flags |= USB_EP_FLAGS_SETUP_PENDING;
     }
 
@@ -918,7 +971,7 @@ transfer_complete(unsigned int hw_ep) {
     start_transfer(ep);
   }
   if (epr &USB_EP0R_CTR_TX) {
-     PRINTF("Sent packet\n"); 
+    PRINTFD("Sent packet\n"); 
     if (ep->flags & USB_EP_FLAGS_DOUBLE) {
       ep->flags &= ~USB_EP_FLAGS_DOUBLE;
     } else {
@@ -1079,7 +1132,7 @@ usb_arch_halt_endpoint(unsigned char ep_addr, int halt)
     USBEndpoint *ep = &usb_endpoints[EP_INDEX(ep_addr)];
     if (ep->status & 0x01) {
       ep->status &= ~0x01;
-      PRINTF("HALT clear restart EPR: %04x %p %p\n",
+      PRINTFD("HALT clear restart EPR: %04x %p %p\n",
 	     (unsigned int)USB->EPR[EP_HW_NUM(ep_addr)],
 	     ep->buffer, ep->buffer->next);
       /* Restore toggle state for double buffered endpoint */
@@ -1112,9 +1165,9 @@ usb_arch_halt_endpoint(unsigned char ep_addr, int halt)
       }
       /* Restart transmission */
       start_transfer(&usb_endpoints[EP_INDEX(ep_addr)]);
-      PRINTF("HALT clear restart EPR: %04x %p %p\n",
+      /*PRINTF("HALT clear restart EPR: %04x %p %p\n",
 	     (unsigned int)USB->EPR[EP_HW_NUM(ep_addr)],
-	     ep->buffer, ep->buffer->next);
+	     ep->buffer, ep->buffer->next);*/
       
     }
   }
@@ -1127,45 +1180,61 @@ usb_arch_set_address(unsigned char addr)
   USB->DADDR = 0x80 | addr;  
 }
 
-void
-USB_HP_CAN_TX_handler(void) __attribute__((interrupt));
 
 void
-USB_HP_CAN_TX_handler(void)
+USBWakeUp_IRQHandler(void) __attribute__((interrupt));
+void 
+USBWakeUp_IRQHandler(void)
+{
+
+  usb_arch_WakeUp();
+}
+
+
+void
+USB_HP_CAN1_TX_IRQHandler(void) __attribute__((interrupt));
+
+void
+USB_HP_CAN1_TX_IRQHandler(void)
 {
   uint32_t status = USB->ISTR;
+
   if (status & USB_ISTR_CTR) {
     transfer_complete(status & USB_ISTR_EP_ID);
   }
 }
 
 void
-USB_LP_CAN_RX0_handler(void) __attribute__((interrupt));
+USB_LP_CAN1_RX0_IRQHandler(void) __attribute__((interrupt));
+
 void
-USB_LP_CAN_RX0_handler(void)
+USB_LP_CAN1_RX0_IRQHandler(void)
 {
   uint32_t status = USB->ISTR;
   if (status & USB_ISTR_CTR) {
     transfer_complete(status & USB_ISTR_EP_ID);
     /* PRINTF("Transfer complete ep %ld\n", status & USB_ISTR_EP_ID); */
   } else if (status & USB_ISTR_PMAOVR) {
-    PRINTF("PMAOVR\n");
+    PRINTFD("PMAOVR\n");
     USB->ISTR &= ~USB_ISTR_PMAOVR;
   } else if (status & USB_ISTR_ERR) {
-    PRINTF("ERR\n");
+    PRINTFD("ERR\n");
     USB->ISTR &= ~USB_ISTR_ERR;
   } else if (status & USB_ISTR_WKUP) {
-    PRINTF("WKUP\n");
+    PRINTFD("WKUP\n");
+//RTC_prevent_sleeping(&sleep_cmp);
+    //usb_arch_WakeUp();
     USB->ISTR &= ~USB_ISTR_WKUP;
     USB->CNTR &= ~USB_CNTR_FSUSP;
     notify_process(USB_EVENT_RESUME);
   } else if (status & USB_ISTR_SUSP) {
-    PRINTF("SUSP\n");
+    PRINTFD("SUSP\n");
+//RTC_allow_sleeping(&sleep_cmp);
     USB->ISTR &= ~USB_ISTR_SUSP;
     USB->CNTR |= USB_CNTR_FSUSP;
     notify_process(USB_EVENT_SUSPEND);
   } else if (status & USB_ISTR_RESET) {
-    PRINTF("RESET\n");
+    PRINTFD("RESET\n");
     USB->ISTR &= ~USB_ISTR_RESET;
     usb_arch_reset();
     notify_process(USB_EVENT_RESET);
