@@ -1288,6 +1288,7 @@ void SX1272OnDio0Irq( void )
                     irqFlags = SX1272Read( REG_LR_IRQFLAGS );
                     if( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR )
                     {
+												printf ("LoRa RX CRC Error\n\r");
                         // Clear Irq
                         SX1272Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR );
 

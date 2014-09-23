@@ -60,6 +60,7 @@ Description: Contiki radio interfec implementation for sx1272
 #include "sx1272_radio.h"
 #include "arduino_spi.h"
 #include "status_led.h"
+#include "sx1272.h"
 
 #define RF_FREQUENCY                                868100000 // Hz
 #define TX_OUTPUT_POWER                             14        // dBm
@@ -124,6 +125,11 @@ void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 
 	 printf("\n\r");
 
+//		printf("REG_LR_FIFOADDRPTR %d REG_LR_FIFORXCURRENTADDR %d\n\r", SX1272Read(REG_LR_FIFOADDRPTR), SX1272Read(REG_LR_FIFORXCURRENTADDR) ) ;
+
+//           Reset Fifo pointer for RX continous
+            SX1272Write( REG_LR_FIFOADDRPTR, SX1272Read(REG_LR_FIFORXCURRENTADDR) );
+ 
 }
 
 void OnTxTimeout( void )
