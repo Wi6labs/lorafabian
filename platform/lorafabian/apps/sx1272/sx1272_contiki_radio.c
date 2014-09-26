@@ -90,6 +90,8 @@ static int tx_ongoing =0;
 static RadioEvents_t RadioEvents;
 void OnTxDone( void )
 {
+	 // Reset RF state
+	 Radio.Standby();
 	 printf("TX sent\n\r");
    tx_ongoing =0;
    status_led_tx_on(FALSE);
@@ -254,8 +256,6 @@ transmit_packet(unsigned short len)
 			if (!tx_ongoing) {
 				status_led_tx_on(TRUE);
 			  Radio.Send( tx_msg_ptr,  tx_msg_size);
-				// Reset RF state
-				Radio.Standby();
 
 				tx_ongoing =1;
 			}
