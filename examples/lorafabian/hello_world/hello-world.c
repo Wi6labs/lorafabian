@@ -39,16 +39,17 @@
  */
 
 #include "contiki.h"
-#include "leds-arch.h"
 #include "stm32f10x.h"
-#include <dev/leds.h>
 #include <stdio.h> /* For printf() */
+#include "status_led.h"
 
 
 
 static struct etimer et_hello;
 
 
+
+static bool led_on = TRUE;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
@@ -58,9 +59,10 @@ PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  leds_init();
-  leds_toggle(LEDS_ALL); 
-	
+
+	status_led_init();
+	status_led_rx_on(led_on);
+	status_led_tx_on(led_on);
 
   etimer_set(&et_hello, 1 * CLOCK_SECOND);
 
@@ -70,8 +72,14 @@ PROCESS_THREAD(hello_world_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     if(ev == PROCESS_EVENT_TIMER) {
-			leds_toggle(LEDS_ALL);
-			printf( "test1\n\r");
+
+			if (led_on) led_on = FALSE;
+			else led_on = TRUE;
+
+			status_led_rx_on(led_on);
+			status_led_tx_on(led_on);
+
+			printf( "Hello World !\n\r");
 
 			etimer_reset(&et_hello);
     }
