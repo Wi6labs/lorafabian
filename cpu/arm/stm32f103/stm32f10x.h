@@ -1275,10 +1275,10 @@ typedef struct
 
 typedef struct
 {
-  __IO uint32_t UI_L;   /*!< Low UID reg,       Address offset: 0x00 */
-  __IO uint32_t UI_M;  /*!< Med UID reg, Address offset: 0x04 */
-  __IO uint32_t UI_H;   /*!< High UID reg,        Address offset: 0x8 */
-  __IO uint32_t dummy; 
+  __IO uint32_t UI_0;   /*!< Low UID reg,       Address offset: 0x00 */
+  __IO uint32_t UI_1;  /*!< Med UID reg, Address offset: 0x04 */
+  __IO uint32_t UI_2;   /*!< High UID reg,        Address offset: 0x8 */
+  __IO uint32_t UI_3; 
 } U_ID_TypeDef;
 
 

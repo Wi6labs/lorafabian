@@ -94,7 +94,9 @@ PROCESS_THREAD(rx_process, ev, data)
 	// Start infinite RX	
 	lora_radio_driver.on();
 
-		
+	// Print CPU serial
+	printf("CPU serial nb: %08x, %08x, %08x, %08x\n", U_ID->UI_0, U_ID->UI_1,  U_ID->UI_2, U_ID->UI_3);
+
 	etimer_set(&rx_timer, 10 * CLOCK_SECOND);
 
   while( 1 )
