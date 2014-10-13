@@ -33,7 +33,6 @@ summary
 .DS_Store
 obj_*
 symbols.*
-Makefile.target
 doc/html
 patches-*
 tools/tunslip
@@ -93,4 +92,5 @@ contiki-cc2530dk.lib
 *.swp
 tags
 *.lorafabian
+!Makefile.lorafabian
 
