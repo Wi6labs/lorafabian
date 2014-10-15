@@ -57,7 +57,6 @@ Description: "file description"
 -----------------------------------------------------------------------------*/                                                             
 
 #include "contiki.h"
-#include "leds-arch.h"
 #include "stm32f10x.h"
 #include <dev/leds.h>
 #include <stdio.h> /* For printf() */
@@ -79,13 +78,6 @@ PROCESS_THREAD(rx_process, ev, data)
 {
   PROCESS_BEGIN();
 
-	int pending = 0;
-	int i;
-	int size;
-
-  leds_init();
-  leds_toggle(LEDS_ALL); 
-
 	arduino_spi_init();
 	status_led_init();
 
@@ -95,7 +87,7 @@ PROCESS_THREAD(rx_process, ev, data)
 	lora_radio_driver.on();
 
 	// Print CPU serial
-	printf("CPU serial nb: %08x, %08x, %08x, %08x\n", U_ID->UI_0, U_ID->UI_1,  U_ID->UI_2, U_ID->UI_3);
+	printf("CPU serial nb: %08x, %08x, %08x, %08x\n",(unsigned int) U_ID->UI_0,(unsigned int) U_ID->UI_1, (unsigned int) U_ID->UI_2,(unsigned int) U_ID->UI_3);
 
 	etimer_set(&rx_timer, 10 * CLOCK_SECOND);
 

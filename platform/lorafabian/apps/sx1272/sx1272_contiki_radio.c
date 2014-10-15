@@ -55,6 +55,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Description: Contiki radio interfec implementation for sx1272
 -----------------------------------------------------------------------------*/                                                             
+#include <stdio.h>
+#include <string.h>
+#include "contiki.h"
 #include "dev/radio.h"
 #include "sx1272_contiki_radio.h"
 #include "sx1272_radio.h"
@@ -91,7 +94,7 @@ static RadioEvents_t RadioEvents;
 void OnTxDone( void )
 {
 	 // Reset RF state
-	 Radio.Standby();
+	 lora_radio_driver.off();
 	 printf("TX sent\n\r");
    tx_ongoing =0;
    status_led_tx_on(FALSE);
@@ -130,7 +133,7 @@ void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 //   printf("REG_LR_FIFOADDRPTR %d REG_LR_FIFORXCURRENTADDR %d\n\r", SX1272Read(REG_LR_FIFOADDRPTR), SX1272Read(REG_LR_FIFORXCURRENTADDR) ) ;
 
  	 // Reset RX to redo startup calibrations
-	 Radio.Standby();
+	 lora_radio_driver.off();
    lora_radio_driver.on();
 	
 }
@@ -154,6 +157,33 @@ void OnRxError( void )
  	
 }
 
+
+
+static struct etimer et_reset_rx;
+PROCESS(rx_reset_process, "rx_reset_process");
+
+PROCESS_THREAD(rx_reset_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+
+
+  while( 1 )
+  {
+
+    PROCESS_WAIT_EVENT();
+
+    if(ev == PROCESS_EVENT_TIMER) {
+
+			printf( "Reset RX\n\r");
+      // Reset RX to redo startup calibrations
+	    lora_radio_driver.off();
+      lora_radio_driver.on();
+	
+    }
+  }
+  PROCESS_END();
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -192,6 +222,9 @@ init(void)
 
 	pending_packets = 0;
 
+  process_start(&rx_reset_process, NULL);
+
+
 return 1;
 }
 
@@ -201,13 +234,20 @@ radio_on(void)
 {
 	// Start infinite RX	
   Radio.Rx( 0 );
+	// Start reset timer
+	 etimer_set(&et_reset_rx, 20 * CLOCK_SECOND);
+	 // assign it to correct process
+	 et_reset_rx.p = &rx_reset_process;
+
   return 1;
 }
 /*---------------------------------------------------------------------------*/
 static int
 radio_off(void)
 {
-  Radio.Standby();
+	// stop reset timer
+	etimer_stop(&et_reset_rx); 
+	Radio.Standby();
 	return 1;
 }
 
@@ -245,7 +285,7 @@ static uint16_t tx_msg_size = 0;
 static int
 prepare_packet(const void *data, unsigned short len)
 {
-	tx_msg_ptr = data;
+	tx_msg_ptr = (uint8_t *) data;
 	tx_msg_size = len;
   return 0;
 }
