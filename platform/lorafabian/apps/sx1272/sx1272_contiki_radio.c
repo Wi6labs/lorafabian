@@ -119,7 +119,7 @@ void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 	 pending_packets ++;
 
 		if (pending_packets > 1) {
-			printf("WARNING: Previous RX msg lost\n\r");
+//			printf("WARNING: Previous RX msg lost\n\r");
 		
 			pending_packets = 1;
 		}
