@@ -235,7 +235,7 @@ radio_on(void)
 	// Start infinite RX	
   Radio.Rx( 0 );
 	// Start reset timer
-	 etimer_set(&et_reset_rx, 20 * CLOCK_SECOND);
+	 etimer_set(&et_reset_rx, RESET_RX_DURATION );
 	 // assign it to correct process
 	 et_reset_rx.p = &rx_reset_process;
 

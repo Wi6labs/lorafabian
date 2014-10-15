@@ -55,6 +55,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Description: contiki radio interface for sx1272
 -----------------------------------------------------------------------------*/                                                             
+#ifndef __SX1272_CONTIKI_RADIO_H__
+#define __SX1272_CONTIKI_RADIO_H__
+
 #include "dev/radio.h"
 extern const struct radio_driver lora_radio_driver;
 
+#define RESET_RX_DURATION (1800 * CLOCK_SECOND)
+
+
+#endif //__SX1272_CONTIKI_RADIO_H__
