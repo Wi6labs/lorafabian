@@ -85,7 +85,7 @@ Description: Contiki radio interfec implementation for sx1272
 
 static int pending_packets = 0;
 
-static uint8_t *rx_msg_ptr = NULL;
+static uint8_t rx_msg_buf[RX_BUFFER_SIZE];
 static uint16_t rx_msg_size = 0;
 
 static int tx_ongoing =0;
@@ -108,13 +108,13 @@ void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 {
    int i;
    
-	 rx_msg_ptr = payload;
 	 rx_msg_size = size;
+	 memcpy( rx_msg_buf, payload, rx_msg_size);
 	  
 	 status_led_rx_on(TRUE);
 
 	 // indicate buffer to arduino interface
-	 set_arduino_read_buf(payload, size);
+	 set_arduino_read_buf(rx_msg_buf, rx_msg_size);
 	
 	 pending_packets ++;
 
@@ -124,9 +124,9 @@ void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 			pending_packets = 1;
 		}
 	 
-	 printf("RX received, size: %d RSSI: %d, SNR: %d\n\r", size, rssi, snr);
-	 for (i = 0; i<size; i++) 
-		 printf("%02x", payload[i] );
+	 printf("RX received, size: %d RSSI: %d, SNR: %d\n\r", rx_msg_size, rssi, snr);
+	 for (i = 0; i<rx_msg_size; i++) 
+		 printf("%02x", rx_msg_buf[i] );
 
 	 printf("\n\r");
 
@@ -263,7 +263,7 @@ radio_read(void *buf, unsigned short bufsize)
 			 return 0;
 		}
 		else {
-			memcpy(buf, rx_msg_ptr, rx_msg_size);
+			memcpy(buf, rx_msg_buf, rx_msg_size);
 			return rx_msg_size;
 		}
 
