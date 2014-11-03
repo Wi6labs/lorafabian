@@ -108,7 +108,7 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 				case ARDUINO_CMD_FREQ:
 					// compute new freq:
 					new_freq = arduino_cmd_buf[3] << 24 | arduino_cmd_buf[4] << 16 |   arduino_cmd_buf[5] << 8 | arduino_cmd_buf[6];
-					printf("Command FREQ received\n\r");
+					printf("Command FREQ received: %d Hz\n\r", new_freq);
 
 					if ( SX1272GetStatus() == RF_RX_RUNNING ){
 				    lora_radio_driver.off();
