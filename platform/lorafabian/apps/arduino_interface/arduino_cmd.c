@@ -59,8 +59,9 @@ AVAILABLE commands which are handled in the SPI interrupt)
 #include "contiki.h"
 #include "stm32f10x.h"
 #include <stdio.h> /* For printf() */
-//#include "sx1272_radio.h"
+#include "sx1272_radio.h"
 #include "sx1272_contiki_radio.h"
+#include "sx1272.h"
 
 #include "arduino_spi.h"
 
@@ -70,6 +71,7 @@ PROCESS(arduino_cmd_process, "arduino cmd process");
 PROCESS_THREAD(arduino_cmd_process, ev, data)
 {
 	u16 len;
+	u32 new_freq;
 
 
   PROCESS_BEGIN();
@@ -100,6 +102,28 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 				
 				case ARDUINO_CMD_TEST:
 					printf("Command Test received\n\r");
+					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+				break;
+
+				case ARDUINO_CMD_FREQ:
+					// compute new freq:
+					new_freq = arduino_cmd_buf[3] << 24 | arduino_cmd_buf[4] << 16 |   arduino_cmd_buf[5] << 8 | arduino_cmd_buf[6];
+					printf("Command FREQ received\n\r");
+
+					if ( SX1272GetStatus() == RF_RX_RUNNING ){
+				    lora_radio_driver.off();
+
+						Radio.SetChannel( new_freq );
+
+						lora_radio_driver.on();
+					}
+					else {
+						Radio.SetChannel( new_freq );
+					}
+
+
+
+
 					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
 				break;
 
