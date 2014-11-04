@@ -81,6 +81,7 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 	u16 len;
 	u32 new_freq;
 	u8 rf_cfg_index;
+	bool restart_rx = FALSE;
 
   PROCESS_BEGIN();
   while( 1 )
@@ -129,19 +130,25 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 						Radio.SetChannel( new_freq );
 					}
 
-
-
-
 					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+
 					break;
 
 				case ARDUINO_CMD_RF_CFG:
-
+					
+					restart_rx = FALSE;
 					rf_cfg_index = arduino_cmd_buf[3];
+
 					if (rf_cfg_index >= LORA_CONFIG_NB) {
 						printf("Error RF config %d not allowed. Replaced by config 0\n\r", rf_cfg_index);
 						rf_cfg_index = 0;
 					}
+
+					if ( SX1272GetStatus() == RF_RX_RUNNING ){
+						lora_radio_driver.off();
+						restart_rx = TRUE;
+					}
+
 					Radio.SetRxConfig( MODEM_LORA, lora_bw[rf_cfg_index], lora_spreading_factor[rf_cfg_index],
 							lora_coding_rate[rf_cfg_index], 0, LORA_PREAMBLE_LENGTH,
 							LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
@@ -156,6 +163,11 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 							 lora_bw[rf_cfg_index], lora_spreading_factor[rf_cfg_index],
 							lora_coding_rate[rf_cfg_index]); 
 
+					if (restart_rx){
+						lora_radio_driver.on();
+					}
+
+					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
 
 					break;
 
