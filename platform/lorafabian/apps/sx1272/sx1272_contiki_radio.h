@@ -64,4 +64,23 @@ extern const struct radio_driver lora_radio_driver;
 #define RESET_RX_DURATION (1800 * CLOCK_SECOND)
 
 
+// LoRa default config
+#define RF_FREQUENCY                                868100000 // Hz
+#define TX_OUTPUT_POWER                             14        // dBm
+#define LORA_BANDWIDTH                              0         // [0: 125 kHz,
+                                                              //  1: 250 kHz,
+                                                              //  2: 500 kHz,
+                                                              //  3: Reserved]
+#define LORA_SPREADING_FACTOR                       12         // [SF7..SF12]
+#define LORA_CODINGRATE                             3         // [1: 4/5,
+                                                              //  2: 4/6,
+                                                              //  3: 4/7,
+                                                              //  4: 4/8]
+#define LORA_PREAMBLE_LENGTH                        8         // Same for Tx and Rx
+#define LORA_SYMBOL_TIMEOUT                         5         // Symbols
+#define LORA_FIX_LENGTH_PAYLOAD_ON                  FALSE
+#define LORA_IQ_INVERSION_ON                        FALSE
+
+#define LORA_CLEAR_CHANNEL_RSSI_THRESHOLD           (-90)     // RSSI threshold in dBm for CSMA
+
 #endif //__SX1272_CONTIKI_RADIO_H__

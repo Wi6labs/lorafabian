@@ -59,10 +59,19 @@ AVAILABLE commands which are handled in the SPI interrupt)
 #include "contiki.h"
 #include "stm32f10x.h"
 #include <stdio.h> /* For printf() */
-//#include "sx1272_radio.h"
+#include "sx1272_radio.h"
 #include "sx1272_contiki_radio.h"
+#include "sx1272.h"
 
 #include "arduino_spi.h"
+
+
+// LoRa configs
+#define LORA_CONFIG_NB 4
+static u8 lora_bw[LORA_CONFIG_NB]               = {0, 1,  2,  2};
+static u8 lora_spreading_factor[LORA_CONFIG_NB] = {7, 9, 11, 12};
+static u8 lora_coding_rate[LORA_CONFIG_NB]      = {1, 2,  3,  4};
+
 
 
 PROCESS(arduino_cmd_process, "arduino cmd process");
@@ -70,7 +79,9 @@ PROCESS(arduino_cmd_process, "arduino cmd process");
 PROCESS_THREAD(arduino_cmd_process, ev, data)
 {
 	u16 len;
-
+	u32 new_freq;
+	u8 rf_cfg_index;
+	bool restart_rx = FALSE;
 
   PROCESS_BEGIN();
   while( 1 )
@@ -91,22 +102,79 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 						// send packet
 						lora_radio_driver.send(&arduino_cmd_buf[3], arduino_cmd_len - 3);
 						// Turn On RX
-//						lora_radio_driver.on();
-					  set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+						//						lora_radio_driver.on();
+						set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
 					}
-					
 
-				break;
-				
+
+					break;
+
 				case ARDUINO_CMD_TEST:
 					printf("Command Test received\n\r");
 					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
-				break;
+					break;
+
+				case ARDUINO_CMD_FREQ:
+					// compute new freq:
+					new_freq = arduino_cmd_buf[3] << 24 | arduino_cmd_buf[4] << 16 |   arduino_cmd_buf[5] << 8 | arduino_cmd_buf[6];
+					printf("Command FREQ received: %d Hz\n\r", new_freq);
+
+					if ( SX1272GetStatus() == RF_RX_RUNNING ){
+						lora_radio_driver.off();
+
+						Radio.SetChannel( new_freq );
+
+						lora_radio_driver.on();
+					}
+					else {
+						Radio.SetChannel( new_freq );
+					}
+
+					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+
+					break;
+
+				case ARDUINO_CMD_RF_CFG:
+					
+					restart_rx = FALSE;
+					rf_cfg_index = arduino_cmd_buf[3];
+
+					if (rf_cfg_index >= LORA_CONFIG_NB) {
+						printf("Error RF config %d not allowed. Replaced by config 0\n\r", rf_cfg_index);
+						rf_cfg_index = 0;
+					}
+
+					if ( SX1272GetStatus() == RF_RX_RUNNING ){
+						lora_radio_driver.off();
+						restart_rx = TRUE;
+					}
+
+					Radio.SetRxConfig( MODEM_LORA, lora_bw[rf_cfg_index], lora_spreading_factor[rf_cfg_index],
+							lora_coding_rate[rf_cfg_index], 0, LORA_PREAMBLE_LENGTH,
+							LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+							TRUE, LORA_IQ_INVERSION_ON, TRUE );
+
+					Radio.SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, lora_bw[rf_cfg_index],
+							lora_spreading_factor[rf_cfg_index], lora_coding_rate[rf_cfg_index],
+							LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+							TRUE, LORA_IQ_INVERSION_ON, 3000000 );
+
+					printf("Lora radio config changed with  BW %d, SF %d, CR %d\n\r",
+							 lora_bw[rf_cfg_index], lora_spreading_factor[rf_cfg_index],
+							lora_coding_rate[rf_cfg_index]); 
+
+					if (restart_rx){
+						lora_radio_driver.on();
+					}
+
+					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+
+					break;
 
 				default :
-					printf("SPI Command unknown\n\r");
+					printf("SPI Command unknown: %d\n\r", arduino_cmd_buf[0]);
 					set_last_cmd_status(ARDUINO_CMD_STATUS_UNKNOWN);
-				break;
+					break;
 
 			}
 		

@@ -213,6 +213,10 @@ main()
   while(1) {
 	  do {  
     } while(process_run() > 0);
+
+			SCB->SCR &=~SCB_SCR_SLEEPDEEP_Msk;
+			__WFI();
+
     idle_count++;
 	}
 	
