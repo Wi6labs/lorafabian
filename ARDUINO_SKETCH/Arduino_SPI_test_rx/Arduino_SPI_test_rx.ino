@@ -15,6 +15,13 @@ void setup() {
   Serial.begin(9600);
 }
 
+
+/*  Minimum wait time between SPI messages: 160 us
+ *  Minimum wait time between two bytes in a SPI message: 15 us
+ */
+const int wait_time_us_between_spi_msg   = 200;
+const int wait_time_us_between_bytes_spi = 20;
+
 void loop() {
 
   int previous_cmd_status;
@@ -46,8 +53,10 @@ void loop() {
   if (available) {
     Serial.print("Message received, size:");
     Serial.print(available);
-     Serial.print(" data: ");   
+    Serial.print(" data: ");
     delay(1);
+    
+    byte data_rcv[available];
     
      for (i=0; i<available; i++) {
 
@@ -55,19 +64,45 @@ void loop() {
        
        //  read data
        previous_cmd_status = SPI.transfer(0x01);
-       delay(1);
+       delayMicroseconds(wait_time_us_between_bytes_spi);
        shield_status = SPI.transfer(0x00);
-       delay(1);
-       read_data = SPI.transfer(0x00);
-       delay(1);
+       delayMicroseconds(wait_time_us_between_bytes_spi);
+       data_rcv[i] = SPI.transfer(0x00);
+       delayMicroseconds(wait_time_us_between_bytes_spi);
+       
        
        digitalWrite(slaveSelectPin,HIGH); 
+       delayMicroseconds(wait_time_us_between_spi_msg);
        
-      delay(1);
-       Serial.print(read_data, HEX);   
+          
      }
+    
+    PrintHex8(data_rcv , available); // Serial.println( data_rcv[i] , HEX); println as HEX does not include trailing zeroes! 0x00 gets printed as '0'
+      
+   
     Serial.println("");
   }
   	  
  delay(100);
+}
+
+void PrintHex8(uint8_t *data, uint8_t length) // prints 8-bit data in hex
+{
+  char tmp[length*2+1];
+  byte first ;
+  int j=0;
+  for (uint8_t i=0; i<length; i++) 
+  {
+    first = (data[i] >> 4) | 48;
+    if (first > 57) tmp[j] = first + (byte)39;
+    else tmp[j] = first ;
+    j++;
+
+    first = (data[i] & 0x0F) | 48;
+    if (first > 57) tmp[j] = first + (byte)39; 
+    else tmp[j] = first;
+    j++;
+  }
+  tmp[length*2] = 0;
+  Serial.print(tmp);
 }
