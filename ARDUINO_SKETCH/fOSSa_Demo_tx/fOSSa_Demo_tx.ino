@@ -7,6 +7,7 @@ int counter = 0;
 
 const int buttonPin = 2;
 int buttonState = 0; 
+int last_buttonState = 0; 
 
 void setup() {
   pinMode(buttonPin, INPUT); 
@@ -47,8 +48,11 @@ void loop() {
  // read the state of the pushbutton value:
   buttonState = digitalRead(buttonPin);
 
- if (buttonState) {
- digitalWrite(slaveSelectPin,LOW);
+ if (buttonState && last_buttonState!= buttonState) {
+
+  last_buttonState = buttonState;
+  
+   digitalWrite(slaveSelectPin,LOW);
 
   //  send data
   SPI.transfer(0x02);
@@ -71,9 +75,14 @@ void loop() {
   // take the SS pin high to de-select the chip:
   digitalWrite(slaveSelectPin,HIGH);  
 
+delay(1000); 
+
 }
-else {
-digitalWrite(slaveSelectPin,LOW);
+else if ( !buttonState && last_buttonState!= buttonState ){
+
+  last_buttonState = buttonState;
+  
+  digitalWrite(slaveSelectPin,LOW);
 
   //  send data
   SPI.transfer(0x02);
@@ -95,9 +104,10 @@ digitalWrite(slaveSelectPin,LOW);
   
   // take the SS pin high to de-select the chip:
   digitalWrite(slaveSelectPin,HIGH);  
- 
+
+delay(1000);  
  
 } 
-  delay(1000); 
+//  delay(1000); 
  
 }

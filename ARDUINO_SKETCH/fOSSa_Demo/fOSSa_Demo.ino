@@ -49,7 +49,7 @@ int x =0;
 int count = 0;
 
 void loop() {
-char msg[4];
+char msg[5];
 int msg_len;
 /*    
     dotmatrix.clear(); 
@@ -170,11 +170,11 @@ dotmatrix.clear();
     dotmatrix.putchar(x, 0, 96, RED); x+=5;
 
     x = 0;
-    dotmatrix.putchar(x, 8, 'A', RED); x+=5;
-    dotmatrix.putchar(x, 8, 'I', RED); x+=5;
-    dotmatrix.putchar(x, 8, 'M', RED); x+=5;
-    dotmatrix.putchar(x, 8, 'E', RED); x+=5;
-    dotmatrix.putchar(x, 8, '!', RED); x+=5;
+    dotmatrix.putchar(x, 8, 'A', RED); x+=6;
+    dotmatrix.putchar(x, 8, 'I', RED); x+=6;
+    dotmatrix.putchar(x, 8, 'M', RED); x+=6;
+    dotmatrix.putchar(x, 8, 'E', RED); x+=6;
+    dotmatrix.putchar(x, 8, '!', RED); x+=6;
 
     dotmatrix.sendframe();
              
