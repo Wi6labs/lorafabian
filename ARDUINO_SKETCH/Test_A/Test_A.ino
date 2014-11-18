@@ -89,7 +89,7 @@ int msg_len;
 delay(100); 
 
 // Check response
-response = 500;
+response = 1000;
 
 while (response) {
    response --;
@@ -149,6 +149,9 @@ while (response) {
      }
        if (msg_len == 5 && msg[0] == 'l' && msg[1] == 'o' && msg[2] == 'r' && msg[3] == 'a' && msg[4] == 'r' ) {
            Serial.println("Test OK");
+       }
+       else {
+           Serial.println("Test KO");         
        }
   }
 }

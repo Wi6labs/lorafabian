@@ -12,6 +12,8 @@ void setup() {
   SPI.setDataMode(SPI_MODE0) ;
   SPI.setClockDivider(SPI_CLOCK_DIV32); 
 
+  Serial.begin(9600);
+  
   delay(100);
 // Change RF config
 
@@ -30,7 +32,7 @@ digitalWrite(slaveSelectPin,LOW);
   // take the SS pin high to de-select the chip:
   digitalWrite(slaveSelectPin,HIGH); 
  
-  Serial.begin(9600);
+
 }
 
 
@@ -99,7 +101,7 @@ void loop() {
 
 
     if (available == 5 && data_rcv[0] == 'l' && data_rcv[1] == 'o' && data_rcv[2] == 'r' && data_rcv[3] == 'a' && data_rcv[4] == 's' ) {      
-       delay(500); 
+       delay(5000); 
  
        // send response
          digitalWrite(slaveSelectPin,LOW);
