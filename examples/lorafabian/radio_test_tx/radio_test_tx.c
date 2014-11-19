@@ -57,19 +57,19 @@ Description: Simple example to test LoRa TX
 -----------------------------------------------------------------------------*/                                                             
 
 #include "contiki.h"
-#include "leds-arch.h"
 #include "stm32f10x.h"
 #include <dev/leds.h>
 #include <stdio.h> /* For printf() */
 #include "sx1272_radio.h"
 #include "sx1272_contiki_radio.h"
 
+#include "status_led.h"
 
 
 static struct etimer tx_timer;
 
 	
-u8 buffer[8] = {0x01 , 0x23 , 0x45 , 0x67 , 0x89 , 0xAB , 0xCD , 0xEF };  	
+u8 buffer[5] = {'l', 'o', 'r', 'a', 'y' };  	
 	
 	/*---------------------------------------------------------------------------*/
 PROCESS(tx_process, "tx process");
@@ -79,8 +79,7 @@ PROCESS_THREAD(tx_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  leds_init();
-  leds_toggle(LEDS_ALL); 
+	status_led_init();
 
 
   // Radio initialization
@@ -94,14 +93,24 @@ PROCESS_THREAD(tx_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     if(ev == PROCESS_EVENT_TIMER) {
-			leds_toggle(LEDS_ALL);
+			buffer [4] = 'y';
+			lora_radio_driver.send(buffer, sizeof(buffer));
+			printf( "test1\n\r");
+
+			etimer_reset(&tx_timer);
+    }
+   
+	  PROCESS_WAIT_EVENT();
+
+    if(ev == PROCESS_EVENT_TIMER) {
+			buffer [4] = 'n';
 
 			lora_radio_driver.send(buffer, sizeof(buffer));
 			printf( "test1\n\r");
 
 			etimer_reset(&tx_timer);
     }
-  }
+   }
   PROCESS_END();
 }
 
