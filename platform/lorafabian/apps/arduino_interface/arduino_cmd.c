@@ -67,10 +67,10 @@ AVAILABLE commands which are handled in the SPI interrupt)
 
 
 // LoRa configs
-#define LORA_CONFIG_NB 4
-static u8 lora_bw[LORA_CONFIG_NB]               = {0, 1,  2,  2};
-static u8 lora_spreading_factor[LORA_CONFIG_NB] = {7, 9, 11, 12};
-static u8 lora_coding_rate[LORA_CONFIG_NB]      = {1, 2,  3,  4};
+#define LORA_CONFIG_NB 5
+static u8 lora_bw[LORA_CONFIG_NB]               = {0, 1,  2,  2,  0};
+static u8 lora_spreading_factor[LORA_CONFIG_NB] = {7, 9, 11, 12, 12};
+static u8 lora_coding_rate[LORA_CONFIG_NB]      = {1, 2,  3,  4,  3};
 
 
 
