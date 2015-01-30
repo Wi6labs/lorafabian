@@ -7,18 +7,18 @@ const int slaveSelectPin = 10;
 void setup() {
   // set the slaveSelectPin as an output:
   pinMode (slaveSelectPin, OUTPUT);
+  digitalWrite(slaveSelectPin,HIGH); 
   // initialize SPI:
   SPI.begin(); 
   SPI.setDataMode(SPI_MODE0) ;
   SPI.setClockDivider(SPI_CLOCK_DIV32); 
 
-  Serial.begin(9600);
-  
-  delay(100);
+ 
+// Wait to be sure SPI is initialised
+  delay(1000);
 // Change RF config
 
 digitalWrite(slaveSelectPin,LOW);
-
   //  data available cmd
   SPI.transfer(0x05);
   delay(1);  
@@ -26,13 +26,14 @@ digitalWrite(slaveSelectPin,LOW);
   delay(1);
   SPI.transfer(0x01);
   delay(1);
-  SPI.transfer(0x00);
+  SPI.transfer(0x01);
   delay(1);
   
   // take the SS pin high to de-select the chip:
   digitalWrite(slaveSelectPin,HIGH); 
  
 
+  Serial.begin(9600);
 }
 
 
