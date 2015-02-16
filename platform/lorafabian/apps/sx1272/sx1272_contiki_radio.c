@@ -136,6 +136,7 @@ void OnRxTimeout( void )
 
 void OnRxError( void )
 {
+	printf("RX Error\n\r");
  	
 }
 
@@ -229,7 +230,7 @@ radio_off(void)
 {
 	// stop reset timer
 	etimer_stop(&et_reset_rx); 
-	Radio.Standby();
+  Radio.Sleep();
 	return 1;
 }
 
