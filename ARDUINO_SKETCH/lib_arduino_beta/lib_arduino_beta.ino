@@ -1,6 +1,8 @@
 void setup() {
   LoRa_init();
   LoRa_RF_config(1);
+  LoRa_freq_channel(3);
+
 
   // Warning always perform Serial.begin after LoRa_init
   Serial.begin(9600);

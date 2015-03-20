@@ -113,7 +113,7 @@ void LoRa_RF_config(int in) {
 // input is in Hz
 // Range is 863 000 000 to 870 000 000
 // Be careful of the band width used at band limits
-void LoRa_freq(int f) {
+void LoRa_freq(long f) {
   digitalWrite(slaveSelectPin,LOW);
   //  FREQ cmd
   SPI.transfer(0x04);
