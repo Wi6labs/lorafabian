@@ -5,16 +5,16 @@ void setup() {
   // Warning always perform Serial.begin after LoRa_init
   Serial.begin(9600);
 }
-/*
+
 // Send Example
 void loop () {
   LoRa_send("hehehe");
 
-  delay(10000);
+  delay(3000);
 
 }
 
-*/
+/*
 // Receive example
 void loop () {
   int avail;
@@ -37,3 +37,4 @@ void loop () {
   delay(100);
 }
 
+*/
