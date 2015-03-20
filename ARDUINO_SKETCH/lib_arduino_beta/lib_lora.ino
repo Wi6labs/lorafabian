@@ -155,6 +155,19 @@ void LoRa_freq_channel(int nb) {
     case 3:
       LoRa_freq(868300000);
     break;
+    case 4:
+      LoRa_freq(869500000);
+    break;
+    case 5:
+      LoRa_freq(869600000);
+    break;
+    case 6:
+      LoRa_freq(869800000);
+    break;
+    case 7:
+      LoRa_freq(869900000);
+    break;
+
 
 
   }
