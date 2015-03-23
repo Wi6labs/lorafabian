@@ -91,7 +91,7 @@ int msg_len;
 delay(100); 
 
 // Check response
-response = 1000;
+response = 100;
 
 while (response) {
    response --;
@@ -113,6 +113,8 @@ while (response) {
 
 
   available = (available_msb<<8) + available_lsb;
+
+  delay(100);
 
    if (available) {
      // get out the while loop
@@ -157,7 +159,8 @@ while (response) {
        }
   }
 }
-//Serial.println("Out response");
+//Serial.print("Out response ");
+//Serial.println(response);
 
 }
 else if ( !buttonState && last_buttonState!= buttonState ){

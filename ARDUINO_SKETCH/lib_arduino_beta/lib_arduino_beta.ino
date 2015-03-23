@@ -12,7 +12,7 @@ void setup() {
 void loop () {
   LoRa_send("hehehe");
 
-  delay(3000);
+  delay(10000);
 
 }
 
