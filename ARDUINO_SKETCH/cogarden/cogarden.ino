@@ -1,38 +1,61 @@
-#include <DHT11.h>
-#include <AirQuality.h>
+//#include <AirQuality.h>
 #include "Arduino.h"
 #include <math.h>
+#include "DHT.h"
+#define DHTPIN A2
 #include <SerialLCD.h>
 #include <SoftwareSerial.h> //this is a must
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 
-
-SerialLCD slcd(11,12);  
-AirQuality airqualitysensor;
-int current_quality =-1;
-int pin=4;
-DHT11 dht11(pin); 
+SerialLCD slcd(6,7);  
+//AirQuality airqualitysensor;
+//int current_quality =-1;
+int pin=5;
 
 void setup() {
   float Rsensor_light;
-  int sensor_Pin_hydro = A1;
   int sensorValue_hydro = 0;
-  byte humidity, temperature;
   slcd.begin();
+  dht.begin();
+  pinMode(A0, OUTPUT);  
   slcd.print("hello, world!");
-  airqualitysensor.init(14);
-}
+ // airqualitysensor.init(14);
+ 
+ Serial.begin(9600);
+ }
 
 void loop() {
   int light_sensorvalue = analogRead(A0);                         // value of light_sensor
-//  Rsensor=(float)(1023-sensorValue)*10/sensorValue;          // resistance ?
- 
+int Rsensor=(float)(1023-light_sensorvalue)*10/light_sensorvalue;          // resistance ?
+Serial.print("Rsensor");
+Serial.println(Rsensor);
  
   int sensorValue_hydro = analogRead(A1);            // Value of hydrometrie
   
-  float humidity, temperature;
-  dht11.read(humidity, temperature);               // value temperature et humidity
+ float h = dht.readHumidity();
+ float t = dht.readTemperature();             // value temperature et humidity
 
 
-  current_quality=airqualitysensor.slope();   // value of airquality; value return = 1 hight pollu, 3 fresh air;;
-}
+  //current_quality=airqualitysensor.slope();   // value of airquality; value return = 1 hight pollu, 3 fresh air;;
+   
+ Serial.print("ligth");
+ Serial.println(light_sensorvalue);
+ 
+ Serial.print("hydro");
+ Serial.println(sensorValue_hydro);
+ 
+ Serial.print("humidity");
+ Serial.println(h);
+ 
+ Serial.print("temperature");
+ Serial.println(t);
+
+ //Serial.print("air quality");
+ //Serial.println(current_quality);
+  Serial.println("-----------------------------------");
+ 
+ 
+ delay(1000);
+ }
 
