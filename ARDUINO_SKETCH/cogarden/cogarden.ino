@@ -26,7 +26,8 @@ void setup() {
  }
 
 void loop() {
-  int light_sensorvalue = analogRead(A0);                         // value of light_sensor
+ String msg;
+ int light_sensorvalue = analogRead(A0);                         // value of light_sensor
 int Rsensor=(float)(1023-light_sensorvalue)*10/light_sensorvalue;          // resistance ?
 Serial.print("Rsensor");
 Serial.println(Rsensor);
@@ -54,7 +55,31 @@ Serial.println(Rsensor);
  //Serial.print("air quality");
  //Serial.println(current_quality);
   Serial.println("-----------------------------------");
- 
+  msg  = "LoraFabian:{";
+
+  msg += "\"light\":\"";
+  msg +=   light_sensorvalue;
+  msg += "\",";
+
+  msg += "\"hydro\":\"";
+  msg +=   sensorValue_hydro;
+  msg += "\",";
+
+  msg += "\"humidity\":\"";
+  msg +=   h;
+  msg += "\",";
+
+  msg += "\"temperature\":\"";
+  msg +=   t;
+  
+  
+  msg += "\"}";
+
+
+  
+  
+  Serial.println(msg);
+  Serial.println("-----------------------------------"); 
  
  delay(1000);
  }
