@@ -16,7 +16,10 @@ int pin=5;
 void setup() {
   float Rsensor_light;
   int sensorValue_hydro = 0;
-  slcd.begin();
+  
+   LoRa_init();
+  LoRa_RF_config(4); slcd.begin();
+  
   dht.begin();
   pinMode(A0, OUTPUT);  
   slcd.print("hello, world!");
@@ -80,7 +83,9 @@ Serial.println(Rsensor);
   
   Serial.println(msg);
   Serial.println("-----------------------------------"); 
- 
- delay(1000);
+
+   LoRa_send(msg);
+
+ delay(30000);
  }
 
