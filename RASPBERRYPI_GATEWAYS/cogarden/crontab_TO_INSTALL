@@ -1,0 +1,5 @@
+# perform command: sudo crontab -e
+# and copy following line into it. It will upload mesurement every minutes
+
+* * * * * /var/www/lorafabian/cogarden/upload.sh
+
