@@ -103,7 +103,13 @@ void loop() {
     Serial.println("");
      snr  = LoRa_last_snr();
      rssi = LoRa_last_rssi();
-
+    
+    Serial.print("SNR : ");
+    Serial.print(snr);
+    Serial.print(" RSSI : ");
+    Serial.println(rssi);
+    
+    
     if (available == 5 && data_rcv[0] == 'l' && data_rcv[1] == 'o' && data_rcv[2] == 'r' && data_rcv[3] == 'a' && data_rcv[4] == 's' ) {      
        delay(5000); 
  
