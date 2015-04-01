@@ -55,10 +55,12 @@ int previous_cmd_status;
   int read_data;
   int i;
  int response;
-char msg[5];
+char msg[16];
 int msg_len;
 char rssi;
 char snr;
+int tested_snr;
+int tested_rssi;
 
   // read the state of the pushbutton value:
   buttonState = digitalRead(buttonPin);
@@ -145,7 +147,9 @@ while (response) {
        
        digitalWrite(slaveSelectPin,HIGH); 
        
-       if (msg_len < 5){ msg[msg_len] = read_data; }
+       //if (msg_len < 5){ 
+       msg[msg_len] = read_data;
+    // }
   //   Serial.println(msg[msg_len]); 
      msg_len++;
               
@@ -153,13 +157,30 @@ while (response) {
        Serial.print(read_data, HEX);   
        
      }
-       if (msg_len == 5 && msg[0] == 'l' && msg[1] == 'o' && msg[2] == 'r' && msg[3] == 'a' && msg[4] == 'r' ) {
+     
+      Serial.println("");
+      
+      if (msg_len == 9 && msg[0] == 'l' && msg[1] == 'o' && msg[2] == 'r' && msg[3] == 'a' && msg[4] == 'r' ) {
            Serial.println("Test OK");
        }
        else {
            Serial.println("Test KO");         
        }
-
+        
+        tested_snr = byte(msg[5])<<8 | byte(msg[6]);
+        tested_rssi = byte(msg[7])<<8 | byte(msg[8]);
+        //Serial.println(byte(msg[5]));
+        //Serial.println(byte(msg[6]));
+        //Serial.println(byte(msg[7]));
+        //Serial.println(byte(msg[8]));
+        
+        
+        Serial.print ("Tested device SNR : ");
+        Serial.print( tested_snr );
+        Serial.print(" RSSI : ");
+        Serial.println( tested_rssi );
+        
+        
       delay(100);     
       
        //  read SNR
