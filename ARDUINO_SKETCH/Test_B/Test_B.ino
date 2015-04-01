@@ -2,12 +2,12 @@
 #include <SPI.h>
 
 // set pin 10 as the slave select for the digital pot:
-const int slaveSelectPin = 10;
+const int SPIslavePin = 10;
 
 void setup() {
-  // set the slaveSelectPin as an output:
-  pinMode (slaveSelectPin, OUTPUT);
-  digitalWrite(slaveSelectPin,HIGH); 
+  // set the SPIslavePin as an output:
+  pinMode (SPIslavePin, OUTPUT);
+  digitalWrite(SPIslavePin,HIGH); 
   // initialize SPI:
   SPI.begin(); 
   SPI.setDataMode(SPI_MODE0) ;
@@ -18,7 +18,7 @@ void setup() {
   delay(1000);
 // Change RF config
 
-digitalWrite(slaveSelectPin,LOW);
+digitalWrite(SPIslavePin,LOW);
   //  data available cmd
   SPI.transfer(0x05);
   delay(1);  
@@ -30,7 +30,7 @@ digitalWrite(slaveSelectPin,LOW);
   delay(1);
   
   // take the SS pin high to de-select the chip:
-  digitalWrite(slaveSelectPin,HIGH); 
+  digitalWrite(SPIslavePin,HIGH); 
  
 
   Serial.begin(9600);
@@ -51,8 +51,10 @@ void loop() {
   int available;
   int read_data;
   int i;
+  int snr;
+  int rssi;
   	 
- digitalWrite(slaveSelectPin,LOW);
+ digitalWrite(SPIslavePin,LOW);
 
   //  data available cmd
   previous_cmd_status = SPI.transfer(0x00);
@@ -65,7 +67,7 @@ void loop() {
   delay(1);
   
   // take the SS pin high to de-select the chip:
-  digitalWrite(slaveSelectPin,HIGH); 
+  digitalWrite(SPIslavePin,HIGH); 
 
 
   available = (available_msb<<8) + available_lsb;
@@ -80,7 +82,7 @@ void loop() {
     
      for (i=0; i<available; i++) {
 
-       digitalWrite(slaveSelectPin,LOW);          
+       digitalWrite(SPIslavePin,LOW);          
        
        //  read data
        previous_cmd_status = SPI.transfer(0x01);
@@ -91,7 +93,7 @@ void loop() {
        delayMicroseconds(wait_time_us_between_bytes_spi);
        
        
-       digitalWrite(slaveSelectPin,HIGH); 
+       digitalWrite(SPIslavePin,HIGH); 
        delayMicroseconds(wait_time_us_between_spi_msg);
        
           
@@ -99,20 +101,21 @@ void loop() {
     
     PrintHex8(data_rcv , available); // Serial.println( data_rcv[i] , HEX); println as HEX does not include trailing zeroes! 0x00 gets printed as '0'
     Serial.println("");
-
+     snr  = LoRa_last_snr();
+     rssi = LoRa_last_rssi();
 
     if (available == 5 && data_rcv[0] == 'l' && data_rcv[1] == 'o' && data_rcv[2] == 'r' && data_rcv[3] == 'a' && data_rcv[4] == 's' ) {      
        delay(5000); 
  
        // send response
-         digitalWrite(slaveSelectPin,LOW);
+         digitalWrite(SPIslavePin,LOW);
 
       //  send data
       SPI.transfer(0x02);
       delay(1);
       SPI.transfer(0x00);
       delay(1);
-      SPI.transfer(0x5);
+      SPI.transfer(0x9);
       delay(1);
       SPI.transfer('l');
       delay(1);
@@ -124,9 +127,17 @@ void loop() {
       delay(1);
        SPI.transfer('r');
       delay(1);
+      SPI.transfer((snr >> 8) & 0xFF);
+      delay(1);
+      SPI.transfer(snr & 0xFF);
+      delay(1);
+      SPI.transfer((rssi >> 8) & 0xFF);
+      delay(1);
+      SPI.transfer(rssi & 0xFF);
+      delay(1);
   
       // take the SS pin high to de-select the chip:
-      digitalWrite(slaveSelectPin,HIGH);  
+      digitalWrite(SPIslavePin,HIGH);  
 
       delay(100); 
 
