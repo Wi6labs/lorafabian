@@ -61,6 +61,8 @@ Description: contiki radio interface for sx1272
 #include "dev/radio.h"
 extern const struct radio_driver lora_radio_driver;
 
+extern int8_t rx_last_snr_g;
+extern int8_t rx_last_rssi_g;
 #define RESET_RX_DURATION (1800 * CLOCK_SECOND)
 
 

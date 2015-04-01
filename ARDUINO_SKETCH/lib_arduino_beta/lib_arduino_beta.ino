@@ -1,22 +1,22 @@
 void setup() {
   LoRa_init();
   LoRa_RF_config(1);
-  LoRa_freq_channel(3);
+ // LoRa_freq_channel(3);
 
 
   // Warning always perform Serial.begin after LoRa_init
   Serial.begin(9600);
 }
-
+/*
 // Send Example
 void loop () {
   LoRa_send("hehehe");
 
   delay(10000);
-
 }
 
-/*
+*/
+
 // Receive example
 void loop () {
   int avail;
@@ -34,9 +34,14 @@ void loop () {
 
     }
     Serial.println("");
+    
+   Serial.print("SNR : ");
+  Serial.print ( LoRa_last_snr() );
+  Serial.print(" RSSI : ");
+  Serial.println( LoRa_last_rssi() );
   }
 
   delay(100);
 }
 
-*/
+

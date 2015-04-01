@@ -174,3 +174,47 @@ void LoRa_freq_channel(int nb) {
 
 
 }
+
+
+// Get Signal to Noise Ratio from la message received
+int LoRa_last_snr(){
+       char snr;
+
+       //  read SNR
+       digitalWrite(slaveSelectPin,LOW);          
+ 
+       SPI.transfer(0x06);
+       delay(1);
+       SPI.transfer(0x00);
+       delay(1);
+       snr = SPI.transfer(0x00);
+       delay(1);
+       
+       digitalWrite(slaveSelectPin,HIGH); 
+       
+      delay(100);     
+ 
+       return int(snr);  
+}
+
+// Get Received signal strength indication from la message received
+int LoRa_last_rssi(){
+    char rssi;
+        //  read RSSI
+       digitalWrite(slaveSelectPin,LOW);          
+ 
+      SPI.transfer(0x07);
+       delay(1);
+       SPI.transfer(0x00);
+       delay(1);
+       rssi = SPI.transfer(0x00);
+       delay(1);
+       
+       digitalWrite(slaveSelectPin,HIGH); 
+       
+      delay(100);     
+ 
+       return int(rssi);  
+}
+   
+

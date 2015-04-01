@@ -64,6 +64,7 @@ Description: Arduino SPI interface implementation
 #include "contiki.h"
 #include "arduino_spi.h"
 #include "status_led.h"
+#include "sx1272_contiki_radio.h"
 
 #define SPI_INTERFACE                               SPI2
 #define SPI_CLK                                     RCC_APB1Periph_SPI2
@@ -215,7 +216,19 @@ void SPI2_IRQHandler(void)
 					SPI_I2S_SendData(SPI_INTERFACE, 0);
 				}
 			}
-
+			else if (cmd == ARDUINO_CMD_LAST_SNR) {
+				if (arduino_cmd_len == 1)       
+					SPI_I2S_SendData(SPI_INTERFACE, rx_last_snr_g);
+        else 
+					SPI_I2S_SendData(SPI_INTERFACE, 0);
+      }
+			else if (cmd == ARDUINO_CMD_LAST_RSSI) {
+				if (arduino_cmd_len == 1)       
+					SPI_I2S_SendData(SPI_INTERFACE, rx_last_rssi_g);
+				else 
+					SPI_I2S_SendData(SPI_INTERFACE, 0);
+      
+      }
 			// store received data
 			arduino_cmd_buf[arduino_cmd_len] = SPI_I2S_ReceiveData(SPI_INTERFACE); arduino_cmd_len++;
 		}

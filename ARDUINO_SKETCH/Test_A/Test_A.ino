@@ -26,7 +26,7 @@ void setup() {
 
 digitalWrite(slaveSelectPin,LOW);
 
-  //  data available cmd
+  //  Change RF config
   SPI.transfer(0x05);
   delay(1);  
   SPI.transfer(0x00);
@@ -57,6 +57,8 @@ int previous_cmd_status;
  int response;
 char msg[5];
 int msg_len;
+char rssi;
+char snr;
 
   // read the state of the pushbutton value:
   buttonState = digitalRead(buttonPin);
@@ -157,6 +159,40 @@ while (response) {
        else {
            Serial.println("Test KO");         
        }
+
+      delay(100);     
+      
+       //  read SNR
+       digitalWrite(slaveSelectPin,LOW);          
+ 
+       previous_cmd_status = SPI.transfer(0x06);
+       delay(1);
+       shield_status = SPI.transfer(0x00);
+       delay(1);
+       snr = SPI.transfer(0x00);
+       delay(1);
+       
+       digitalWrite(slaveSelectPin,HIGH); 
+       
+      delay(100);     
+
+       // read RSSI
+        digitalWrite(slaveSelectPin,LOW);          
+ 
+       previous_cmd_status = SPI.transfer(0x07);
+       delay(1);
+       shield_status = SPI.transfer(0x00);
+       delay(1);
+       rssi = SPI.transfer(0x00);
+       delay(1);
+       
+       digitalWrite(slaveSelectPin,HIGH); 
+      
+      Serial.print("RSSI : ");
+       Serial.print(int(rssi));
+       Serial.print("  SNR : ");
+       Serial.println(int( snr));
+      delay(100);     
   }
 }
 //Serial.print("Out response ");

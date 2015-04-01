@@ -65,6 +65,9 @@ Description: Contiki radio interfec implementation for sx1272
 #include "status_led.h"
 #include "sx1272.h"
 
+int8_t rx_last_snr_g = 0;
+int8_t rx_last_rssi_g = 0;
+
 static int pending_packets = 0;
 
 static uint8_t rx_msg_buf[RX_BUFFER_SIZE];
@@ -105,6 +108,10 @@ void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 		
 			pending_packets = 1;
 		}
+
+   // save Rssi and SNR
+  rx_last_snr_g = snr;
+  rx_last_rssi_g = rssi;
 	 
 	 printf("RX received, size: %d RSSI: %d, SNR: %d\n\r", rx_msg_size, rssi, snr);
 	 for (i = 0; i<rx_msg_size; i++) 
