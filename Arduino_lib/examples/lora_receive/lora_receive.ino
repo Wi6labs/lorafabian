@@ -31,8 +31,10 @@ void setup() {
 	
 	myLoRaShield.lora_init();
 	
-	//myLoRaShield.lora_rfConf(3); //done in init()
-	//myLoRaShield.lora_setChannelFreq(255); //done in init() - 255 = default channel
+	// Alternative init call
+	//myLoRaShield.lora_init(false);
+	//myLoRaShield.lora_rfConf(3);
+	//myLoRaShield.lora_setChannelFreq(255); // 255 = default channel
 	
 	//Start serial always after LoRa Init
 	Serial.begin(9600);

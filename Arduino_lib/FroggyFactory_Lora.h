@@ -6,6 +6,7 @@
     @section  HISTORY
 
     v0.1 - First beta release
+	v0.2 - Adding flexibility for init() and capability to get Frequency setting & RFConf
 
     This library allows to talk to the Froggy Factory LoRa shield for Arduino - Wi6labs
 	
@@ -105,7 +106,7 @@
 			FROGGYFACTORY_LORA(void);
 			FROGGYFACTORY_LORA(uint8_t ss_pin, long freq);
 			
-			void	lora_init(void);
+			void	lora_init(boolean doRFsetting = true);
 			void	lora_rfConf(uint8_t cfg);
 			void	lora_setFreq(long freq);
 			void	lora_setChannelFreq(uint8_t channel);
@@ -114,11 +115,14 @@
 			char	lora_read(void);
 			int		lora_getSnr(void);
 			int		lora_getRssi(void);
+			long	lora_getFreq(void);
+			uint8_t	lora_getRFConf(void);
 			
 		private:
 		
 			long	_frequency;
 			uint8_t	_ss_pin;
+			uint8_t _rfconf;
 			
 	};
 #endif

@@ -24,7 +24,6 @@
 FROGGYFACTORY_LORA myLoRaShield;
 //FROGGYFACTORY_LORA myLoRaShield(CSPIN, FREQ); //alternative constructor call
 
-int available_payload;
 String default_payload = "FF LoRa Shield - ";
 String payload;
 
@@ -33,8 +32,10 @@ void setup() {
 	
 	myLoRaShield.lora_init();
 	
-	//myLoRaShield.lora_rfConf(3); //done in init()
-	//myLoRaShield.lora_setChannelFreq(255); //done in init() - 255 = default channel
+	// Alternative init call
+	//myLoRaShield.lora_init(false);
+	//myLoRaShield.lora_rfConf(3);
+	//myLoRaShield.lora_setChannelFreq(255); // 255 = default channel
 	
 	//Start serial always after LoRa Init
 	Serial.begin(9600);

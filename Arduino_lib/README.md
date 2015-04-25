@@ -2,8 +2,9 @@ Arduino library for LoRa Shield from Froggy Factory - Wi6labs
 ==============
 
 	v0.1 - First beta release
+	v0.2 - Adding flexibility on shield init, reading of current frequency and rfConf
 
-This shield allows you to send payloads OTA using LoRa Technology. The shield embeds a Semtech SX1272 chip.
+This shield allows you to send / receive payloads OTA using LoRa Technology. It embeds a Semtech SX1272 chip.
 
 
 ## Features ##
@@ -15,13 +16,15 @@ This shield allows you to send payloads OTA using LoRa Technology. The shield em
 - Receive payload
 - Read SNR
 - Read RSSI
+- Read current frequency setting
+- Read current RFConf
 
 ## Code examples ##
 - Receive data
 - Send data
 
 ## Not available yet features ##
-- gateway related features
+- Gateway related features
 
 
 ## Testing ##

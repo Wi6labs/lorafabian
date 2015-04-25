@@ -7,6 +7,7 @@
     @section  HISTORY
 
     v0.1 - First beta release
+	v0.2 - Adding flexibility for init() and capability to get Frequency setting & RFConf
 
     This library allows to talk to the Froggy Factory LoRa shield for Arduino - Wi6labs
 */
@@ -51,7 +52,7 @@ FROGGYFACTORY_LORA::FROGGYFACTORY_LORA(uint8_t ss_pin, long freq)
 */
 /**************************************************************************/
 
-void FROGGYFACTORY_LORA::lora_init(void) {
+void FROGGYFACTORY_LORA::lora_init(boolean doRFsetting) {
 
 	pinMode (_ss_pin, OUTPUT);
 	digitalWrite(_ss_pin, !SS_PIN_ACTIVE); 
@@ -74,9 +75,10 @@ void FROGGYFACTORY_LORA::lora_init(void) {
 
 	delay(WAIT_SPI_UP);
 	
-	FROGGYFACTORY_LORA::lora_rfConf(RFCONF_DEFAULT);
-	FROGGYFACTORY_LORA::lora_setFreq(_frequency);
-	
+	if (doRFsetting) {
+		FROGGYFACTORY_LORA::lora_rfConf(RFCONF_DEFAULT);
+		FROGGYFACTORY_LORA::lora_setFreq(_frequency);
+	}
 	
 	return;
 }
@@ -112,6 +114,8 @@ void FROGGYFACTORY_LORA::lora_rfConf(uint8_t cfg) {
 		
 		digitalWrite(_ss_pin, !SS_PIN_ACTIVE);
 		delay(WAIT_SPI_SS_OFF);
+		
+		_rfconf = cfg;
 	
 	}
 	return;
@@ -154,6 +158,8 @@ void FROGGYFACTORY_LORA::lora_setFreq(long freq) {
 		
 		digitalWrite(_ss_pin, !SS_PIN_ACTIVE);
 		delay(WAIT_SPI_SS_OFF);
+		
+		_frequency = freq;
 	}
 	return;
 }
@@ -370,4 +376,36 @@ int FROGGYFACTORY_LORA::lora_getRssi(void) {
 	delay(WAIT_SPI_SS_OFF);
 	
 	return (int) rssi;
+}
+
+
+/**************************************************************************/
+/*!
+    @brief  returns frequency value
+    
+    @params 	
+				none
+				
+	@returns
+				Frequency as long
+*/
+/**************************************************************************/
+long FROGGYFACTORY_LORA::lora_getFreq(void) {
+	return _frequency;
+}
+
+
+/**************************************************************************/
+/*!
+    @brief  returns rfconf value
+    
+    @params 	
+				none
+				
+	@returns
+				rfconf as uint8_t
+*/
+/**************************************************************************/
+uint8_t FROGGYFACTORY_LORA::lora_getRFConf(void) {
+	return _rfconf;
 }
