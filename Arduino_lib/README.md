@@ -31,7 +31,7 @@ This shield allows you to send payloads OTA using LoRa Technology. The shield em
 - Please comment about other devices / IDE
 
 ## Links ##
-- [Froggy factory](www.froggyfactory.com/)
+- [Froggy factory](http://www.froggyfactory.com/)
 - [Wi6labs](http://www.wi6labs.com)
 - [Lora Fabian](http://www.labfab.fr/portfolio/lora-fabian/)
 - [Semtech](http://www.semtech.com/wireless-rf/rf-transceivers/)
