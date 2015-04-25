@@ -1,0 +1,28 @@
+#######################################
+# Syntax Coloring Map For FF LoRa Shield
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+FROGGYFACTORY_LORA	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+lora_init	KEYWORD2
+lora_rfConf	KEYWORD2
+lora_setFreq	KEYWORD2
+lora_setChannelFreq	KEYWORD2
+lora_available	KEYWORD2
+lora_send	KEYWORD2
+lora_read	KEYWORD2
+lora_getSnr	KEYWORD2
+lora_getRssi	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
