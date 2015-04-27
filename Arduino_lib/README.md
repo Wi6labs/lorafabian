@@ -22,6 +22,7 @@ This shield allows you to send / receive payloads OTA using LoRa Technology. It 
 ## Code examples ##
 - Receive data
 - Send data
+- Repeater
 
 ## Not available yet features ##
 - Gateway related features
