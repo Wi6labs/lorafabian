@@ -6,6 +6,8 @@ Arduino library for LoRa Shield from Froggy Factory - Wi6labs
 
 This shield allows you to send / receive payloads OTA using LoRa Technology. It embeds a Semtech SX1272 chip.
 
+![Alt text](/res/arduino_shield.jpg)
+
 
 ## Features ##
 - Init the shield
