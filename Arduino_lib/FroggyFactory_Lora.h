@@ -7,6 +7,7 @@
 
     v0.1 - First beta release
 	v0.2 - Adding flexibility for init() and capability to get Frequency setting & RFConf
+	v0.3 - Adding automatic SPI clock management according to MCU frequency
 
     This library allows to talk to the Froggy Factory LoRa shield for Arduino - Wi6labs
 	
@@ -43,7 +44,7 @@
 #ifndef _FROGGYFACTORY_LORA_H_
 #define _FROGGYFACTORY_LORA_H_
 
-	#if ARDUINO >= 100
+	#if defined(ARDUINO) && ARDUINO >= 100
 		#include <Arduino.h>
 	#else
 		#include <WProgram.h>
@@ -52,25 +53,23 @@
 	#include <SPI.h>
 
 
-	#define BOARD MCU16 	// MCU8 || MCU16 || DUE - defining the MCU clock speed used allows to set the SPI timing
-							// please have a look on http://www.arduino.cc/en/Products.Compare
-							// The MCU frequency must be divided to get a 500 KHz SPI frequency
 	#define SS_PIN 10
 	#define SS_PIN_ACTIVE LOW
 	#define SPI_DATA_MODE SPI_MODE0
+	
+	#if defined(F_CPU) && F_CPU == 8000000L
+			//MCU 8MHz
+			#define SPI_CLK_DIVIDER SPI_CLOCK_DIV16
+	#elif defined(F_CPU) && F_CPU == 16000000L
+			//MCU 16 MHz
+			#define SPI_CLK_DIVIDER SPI_CLOCK_DIV32
+	#elif defined(F_CPU) && F_CPU == 84000000L
+			//Due board
+			#define DUEBOARD
+			#define SPI_CLK_DIVIDER 168
+	#endif
 
-	#ifdef BOARD == MCU8
-		#define SPI_CLK_DIVIDER SPI_CLOCK_DIV16
-	#endif
-	#ifdef BOARD == MCU16
-		#define SPI_CLK_DIVIDER SPI_CLOCK_DIV32
-	#endif
-	/**** //DUE support removed at the moment
-	#ifdef BOARD == DUE
-		#define SPI_CLK_DIVIDER 168
-	#endif
-	*****/
-
+ 
 	#define CMD_NULL 0x00
 	#define CMD_READ 0x01
 	#define CMD_SEND 0x02

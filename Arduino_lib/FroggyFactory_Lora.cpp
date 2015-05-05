@@ -8,6 +8,7 @@
 
     v0.1 - First beta release
 	v0.2 - Adding flexibility for init() and capability to get Frequency setting & RFConf
+	v0.3 - Adding automatic SPI clock management according to MCU frequencyv0.3 - Adding automatic SPI clock management according to MCU frequency
 
     This library allows to talk to the Froggy Factory LoRa shield for Arduino - Wi6labs
 */
@@ -60,18 +61,13 @@ void FROGGYFACTORY_LORA::lora_init(boolean doRFsetting) {
 	// initialize SPI:
 	SPI.begin(); 
 	
-	/******
-	#if BOARD == DUE
+	#if defined(DUEBOARD) 
 		SPI.setDataMode(_ss_pin, SPI_DATA_MODE);
-		SPI.setClockDivider(_ss_pin, SPI_CLK_DIVIDER);	
+		SPI.setClockDivider(_ss_pin, SPI_CLK_DIVIDER);		
 	#else
 		SPI.setDataMode(SPI_DATA_MODE);
 		SPI.setClockDivider(SPI_CLK_DIVIDER);	
 	#endif
-	*******/
-	
-	SPI.setDataMode(SPI_DATA_MODE);
-	SPI.setClockDivider(SPI_CLK_DIVIDER);
 
 	delay(WAIT_SPI_UP);
 	
