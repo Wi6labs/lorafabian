@@ -1,7 +1,6 @@
 *.a
 *.bin
 *.map
-*.png
 *.log
 *.elf
 *.d
