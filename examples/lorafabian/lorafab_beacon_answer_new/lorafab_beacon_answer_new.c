@@ -51,16 +51,22 @@ static u8 rx_msg[256];
 static uint8_t tx_buffer[512];
 int tx_buffer_index;
 
+// Modifi here: the MAC and the reply to coap_payload_beacon (the response)
+uint8_t header_802_15_4_hardcoded[] = {0x22,0x27,0x01,0xfa,0x81, // Don touch this
+							0xfa,0xba,0x00,0x00,0x00,0x00,0x00,0x03}; // This is our 8Byte MAC. TODO Frame real 80215
+
+char coap_payload_beacon[] = "{\"n\":\"gamma.s.ackl.io\"}";
+
 void coap_beacon_send_response(){
 
 	// TODO: encapsulate in 802.15.4 Frame? or its contiki work?
 	tx_buffer_index = 0;
 
 	// 802154 FRAME HEADER
-	uint8_t header_802_15_4[] = {0x22,0x27,0x01,0xfa,0x81,0xb0,0xca,0x00,0x00,0x00,0x00,0x00,0x01}; // TODO Frame real 80215
+	//uint8_t header_802_15_4[] = header_802_15_4_hardcoded;
 
-	memcpy(tx_buffer, header_802_15_4 , sizeof(header_802_15_4));
-	tx_buffer_index += sizeof(header_802_15_4);
+	memcpy(tx_buffer, header_802_15_4_hardcoded , sizeof(header_802_15_4_hardcoded));
+	tx_buffer_index += sizeof(header_802_15_4_hardcoded);
 
 	// COAP
 	//coap_packet_t coap_packet;
@@ -68,17 +74,18 @@ void coap_beacon_send_response(){
 	static coap_packet_t coap_request[1];      /* This way the packet can be treated as pointer as usual. */
 
 	coap_init_message(coap_request, COAP_TYPE_NON, COAP_POST, coap_get_mid()); // random_rand();
-	//coap_set_header_uri_path(coap_request, service_urls[0]);
-	//coap_set_header_uri_host(coap_request, service_urls[1]);
 
 
 
-	char coap_payload[] = "{\"n\":\"beta.s.ackl.io\"}";
-	coap_set_payload(coap_request, (uint8_t *)coap_payload, sizeof(coap_payload) - 1);
+	//char coap_payload[] = coap_payload_beacon;
+	coap_set_payload(coap_request, (uint8_t *)coap_payload_beacon, sizeof(coap_payload_beacon) - 1);
 
 	coap_packet_size = coap_serialize_message(coap_request, (void *)(tx_buffer + tx_buffer_index));
 	tx_buffer_index += coap_packet_size;
-	printf("We are sending the response to the coap beacon");
+	printf("We are sending the response to the coap beacon\n");
+	int iaux;
+	for (iaux = 0 ; iaux < tx_buffer_index; iaux++ ) printf("%02x", tx_buffer[iaux]);
+
 	lora_radio_driver.send(tx_buffer, tx_buffer_index);
 
 }
@@ -97,7 +104,7 @@ void respond_if_coap_beacon( u8 rx_msg[] , int size){
 	}
 
 	// 1 ) Analyse 802.15.4 HEADER
-	printf("\n\r\tHeader FCF (41C8)?: %02x%02x", rx_msg[0], rx_msg[1]);
+	printf("\n\r\tHeader FCF (2227)?: %02x%02x", rx_msg[0], rx_msg[1]);
 	printf("\n\r\tHeader SEQ (dont care): %02x", rx_msg[2]);
 
 	// 2 ) Analyse 802.15.4 PANID
@@ -115,7 +122,6 @@ void respond_if_coap_beacon( u8 rx_msg[] , int size){
 
 	printf("\n\r\tPailod is CoAP Beacon?: ");
 
-
 	 /* static declaration reduces stack peaks and program code size */
 	static coap_packet_t coap_message[1]; /* this way the packet can be treated as pointer as usual */
 	erbium_status_code = NO_ERROR;
@@ -123,7 +129,8 @@ void respond_if_coap_beacon( u8 rx_msg[] , int size){
 	erbium_status_code =
 	coap_parse_message(coap_message, (void *)(rx_msg + mac_header_size), size - mac_header_size);
 	if(erbium_status_code == NO_ERROR) {
-		int check_coap_beacon = (coap_message->type == COAP_TYPE_NON) && ((coap_message->code == COAP_POST));
+		int check_coap_beacon = (coap_message->type == COAP_TYPE_NON) && ((coap_message->code == COAP_POST)
+								&& (coap_message->payload_len == 0));
 		if ( check_coap_beacon ){
 			printf("This is the LoRA CoAP Beacon");
 
