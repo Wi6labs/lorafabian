@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Lora Fabian</title>
+  </head>
+
+  <body>
+  <p>
+    <img src="FroggyFactory_logo.png" alt="Logo Froggy Factory" style="width: 200px;" />
+    <img src="carte_lorafabian.png" alt="Carte Lora Fabian" style="width: 120px;margin-left: 200px;" />
+  </p>
+  <p>
+    <fieldset>
+      <legend>Send a message</legend>  
+      <br>
+      <label for="nom">Message :</label>
+      <input type="text" name="msg" id="msg" style="width: 450px;" />
+      <br><br>
+      <button type="button" onclick="myFunctionSend()" >Send</button>
+    </fieldset>
+    <br> <br>
+    <fieldset>
+      <legend>Received messages</legend> 
+      <br>
+      <textarea id="rcvMsg" rows="15" cols="75">
+      </textarea>
+      <br><br>
+      <button type="button" onclick="myFunctionUpdate()" >Update</button>
+      <button type="button" onclick="myFunctionClear()" >Clear</button>
+    </fieldset>
+  </p>
+
+<script>
+
+// call this function when the page is loaded to update the list of received msg
+window.onload = myFunctionUpdate;
+
+// send a command (TX)
+function myFunctionSend() 
+{
+  // get the command to send
+  var msg = document.getElementById("msg");
+  
+  // create AJAX request
+  var xhr = new XMLHttpRequest();
+  
+  // build URL with a parameter
+  var url = "send.php?command=LoraFabian:"+msg.value;
+  
+  // use parameter type GET
+  xhr.open("GET", url, true);
+  
+  // send the request
+  xhr.send(null);
+}
+
+// clean the text area which contains received message, and request to the server to delete the file
+function myFunctionClear() 
+{
+  // clean the text area
+  var rcvMsg = document.getElementById("rcvMsg");
+  rcvMsg.innerHTML="";
+
+  // create the AJAX request
+  var xhr = new XMLHttpRequest();
+
+  // build URL 
+  var url = "clear.php";
+  xhr.open("GET", url, true);
+  
+  // send the request
+  xhr.send(null);
+}
+
+// update the content of the text area which contains received message
+function myFunctionUpdate() 
+{
+  // create the AJAX request
+  var xhr = new XMLHttpRequest();
+
+  // build URL 
+  var url = "update.php";
+  xhr.open("GET", url, true);
+
+  // send the request
+  xhr.send(null);
+
+
+  // manage the response of this AJAX request
+  xhr.onreadystatechange = function() 
+  {
+    if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 0)) 
+    {
+      var rcvMsg = document.getElementById("rcvMsg");
+      rcvMsg.innerHTML=xhr.responseText;
+    }
+  };
+
+  // restart timer to do a periodic update (2 seconds)
+  setTimeout(myFunctionUpdate, 2000);
+}
+</script>
+
+  </body>
+</html>

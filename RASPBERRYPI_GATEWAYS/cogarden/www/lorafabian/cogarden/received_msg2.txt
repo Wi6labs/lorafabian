@@ -1,0 +1,1 @@
+LoraFabian:light=724&hydro=628&humidity=90.30&temperature=18.70

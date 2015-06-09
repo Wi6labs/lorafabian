@@ -60,12 +60,13 @@ channel configured in sx1272_contiki_radio.c
 #include "contiki.h"
 #include "leds-arch.h"
 #include "stm32f10x.h"
-#include <dev/leds.h>
 #include <stdio.h> /* For printf() */
 //#include "sx1272_radio.h"
 #include "sx1272_contiki_radio.h"
 
 #include "arduino_spi.h"
+
+#include "status_led.h"
 
 static struct etimer rx_timer;
 
@@ -83,8 +84,7 @@ PROCESS_THREAD(rx_process, ev, data)
 	int i;
 	int size;
 
-  leds_init();
-  leds_toggle(LEDS_ALL); 
+	status_led_init();
 
 	arduino_spi_init();
 
@@ -94,7 +94,7 @@ PROCESS_THREAD(rx_process, ev, data)
 	lora_radio_driver.on();
 
 		
-	etimer_set(&rx_timer, 5 * CLOCK_SECOND);
+	etimer_set(&rx_timer, 1 * CLOCK_SECOND);
 
   while( 1 )
   {
@@ -102,7 +102,6 @@ PROCESS_THREAD(rx_process, ev, data)
     PROCESS_WAIT_EVENT();
 
     if(ev == PROCESS_EVENT_TIMER) {
-			leds_toggle(LEDS_ALL);
 
 			pending = lora_radio_driver.pending_packet();
 			printf("pending_packet: %d\n\r", pending );
@@ -114,6 +113,7 @@ PROCESS_THREAD(rx_process, ev, data)
 					printf("%02x", rx_msg[i] );
 
 				printf("\n\r");
+				status_led_rx_on(FALSE);
 			}
 
 

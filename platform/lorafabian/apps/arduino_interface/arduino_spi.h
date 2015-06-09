@@ -77,6 +77,8 @@ extern u16 arduino_read_buf_len;
 #define ARDUINO_CMD_TEST      0x03 
 #define ARDUINO_CMD_FREQ      0x04 
 #define ARDUINO_CMD_RF_CFG    0x05
+#define ARDUINO_CMD_LAST_SNR  0x06
+#define ARDUINO_CMD_LAST_RSSI 0x07
 
 // Command status
 #define ARDUINO_CMD_STATUS_OK									0x80

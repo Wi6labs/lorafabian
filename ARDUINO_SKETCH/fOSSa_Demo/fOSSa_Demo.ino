@@ -163,17 +163,17 @@ dotmatrix.clear();
           */
   dotmatrix.clear();
        x = 0;
-    dotmatrix.putchar(x, 0, 'J', RED); x+=5;
-    dotmatrix.putchar(x, 0, 'e', RED); x+=5;
-    dotmatrix.putchar(x, 0, ' ', RED); x+=5;
-    dotmatrix.putchar(x, 0, 't', RED); x+=5;
-    dotmatrix.putchar(x, 0, 96, RED); x+=5;
+    dotmatrix.putchar(x, 0, 'f', RED); x+=6;
+    dotmatrix.putchar(x, 0, 'O', RED); x+=6;
+    dotmatrix.putchar(x, 0, 'S', RED); x+=6;
+    dotmatrix.putchar(x, 0, 'S', RED); x+=6;
+    dotmatrix.putchar(x, 0, 'a', RED); x+=6;
 
     x = 0;
-    dotmatrix.putchar(x, 8, 'A', RED); x+=6;
-    dotmatrix.putchar(x, 8, 'I', RED); x+=6;
-    dotmatrix.putchar(x, 8, 'M', RED); x+=6;
-    dotmatrix.putchar(x, 8, 'E', RED); x+=6;
+    dotmatrix.putchar(x, 8, '2', RED); x+=6;
+    dotmatrix.putchar(x, 8, '0', RED); x+=6;
+    dotmatrix.putchar(x, 8, '1', RED); x+=6;
+    dotmatrix.putchar(x, 8, '4', RED); x+=6;
     dotmatrix.putchar(x, 8, '!', RED); x+=6;
 
     dotmatrix.sendframe();
