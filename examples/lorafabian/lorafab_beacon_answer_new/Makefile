@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = lorafab_beacon_answer
+CONTIKI_PROJECT = lorafab_beacon_answer_new
 
 all: obj_$(TARGET) $(CONTIKI_PROJECT)
 
