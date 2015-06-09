@@ -16,5 +16,8 @@ USE_LORAFAB_RESTART_RX_AFTER_TX = 1
 
 #UIP_CONF_IPV6=1
 #APPS = serial-shell
+APPS += er-coap
+APPS += rest-engine
+
 CONTIKI = ../../..
 include $(CONTIKI)/Makefile.include
