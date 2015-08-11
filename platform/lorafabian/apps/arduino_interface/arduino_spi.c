@@ -236,10 +236,10 @@ void SPI2_IRQHandler(void)
 	}	
 
 
-//	printf ("\nSPI msg received:\n\r");
-//	for (i=0; i< arduino_cmd_len; i++)
-//		printf("%02x", arduino_cmd_buf[i]);
-//	printf ("\n\r");
+/*	printf ("\nSPI msg received:\n\r");*/
+/*	for (i=0; i< arduino_cmd_len; i++)*/
+/*		printf("%02x", arduino_cmd_buf[i]);*/
+/*	printf ("\n\r");*/
 
 
 	// prepare last command status if possible
@@ -273,8 +273,6 @@ void set_arduino_read_buf(u8 * buf, u16 len) {
 
 void set_last_cmd_status(u8 status){
 	SPI_I2S_SendData(SPI_INTERFACE, status );
-
-
 }
 
 
