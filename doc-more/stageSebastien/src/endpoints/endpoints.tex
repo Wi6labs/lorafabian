@@ -1,0 +1,93 @@
+\documentclass{article}
+%packages
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper]{geometry}
+\usepackage{minted}
+
+\title{endpoints.h}
+\date{July 13th 2015}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{Description}
+In our case, we run a COAP server on the Arduino. This server can send a response to any COAP request which the arduino receives through the LoRa Network. So, we can imagine a light sensor which send its value when we make a GET request. In the following documentation, the name of the Arduino object will be \emph{toto.s.ackl.io}.
+
+\section{Add a point}
+\subsection{Basics}
+To add a point, we need 2 things. First, we need a path to access this point. We declare the path as following:\\
+\begin{minted}{c}
+//First create a coap_endpoint_path_t
+static const coap_endpoint_path_t our_path = {1, {"example"}};
+//1 is the length of the dictionnary ({"example"})
+
+//Then, add this path to the endpoints
+const coap_endpoint_t endpoints[] =
+{
+    {COAP_METHOD_GET, handle_get_well_known_core, &path_well_known_core, "ct=40"},
+    {COAP_METHOD_GET, handle_example, &our_path, "ct=0"},
+    {(coap_method_t)0, NULL, NULL, NULL}
+};
+\end{minted}
+With this code, we will match the path \emph{toto.s.ackl.io/example} and start handle\_example. We must to create the handle:\\
+\begin{minted}{c}
+static int handle_example(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, 
+coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+  Serial.print("Example!");
+  char lightMsg[] = "Example!";
+
+  return coap_make_response(scratch, outpkt, (const uint8_t *)lightMsg, 
+  strlen(lightMsg), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, 
+  COAP_CONTENTTYPE_TEXT_PLAIN);
+}
+\end{minted}
+\subsection{Interact with the Arduino}
+The file endpoints.h include the Arduino library. So, you can write Arduino code in the handle without any problem. For example, we can imagine a handle to turn on a led:\\
+\begin{minted}{c}
+static const coap_endpoint_path_t path_led_on = {1, {"ledon"}};
+
+static int handle_get_led_on(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt,
+coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+  Serial.println("led on!");
+  digitalWrite(led, HIGH);
+  char ledonmsg[] = "the led is on";  
+  
+  return coap_make_response(scratch, outpkt, (const uint8_t *)ledonmsg, 
+  strlen(ledonmsg), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, 
+  COAP_CONTENTTYPE_TEXT_PLAIN);
+}
+\end{minted}
+\subsection{Return types}
+With the previous examples, we send a text response. But we can respond other things:
+\begin{itemize}
+  \item COAP\_CONTENTTYPE\_NONE
+  \item COAP\_CONTENTTYPE\_TEXT\_PLAIN
+  \item COAP\_CONTENTTYPE\_APPLICATION\_LINKFORMAT
+  \item COAP\_CONTENTTYPE\_APPLICATION\_XML
+\end{itemize}
+\subsection{Example}
+To send a webpage:\\
+\begin{minted}{c}
+static const coap_endpoint_path_t path_helloWorld = {1, {"helloWorld"}};
+
+static int handle_get_helloWorld(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt,
+coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+  Serial.println("hello World!");
+  
+  char hellomsg[] = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><center><h1>
+  Hello World :) </h1></center></html>";
+  
+  return coap_make_response(scratch, outpkt, (const uint8_t *)hellomsg, strlen(hellomsg), 
+  id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_XML);
+}
+\end{minted}
+\end{document}
+

@@ -19,7 +19,7 @@ CFLAGS+=-DSTM32F10X_MD
 CFLAGS+=-DLOG_ASSERT
 
 DEV_FILE = leds.c leds-arch.c\
-            newlib_stub.c stm32f10x_it.c
+           newlib_stub.c stm32f10x_it.c
 
 ifeq ($(DFU_BOOTLD_USED),1)
     CFLAGS+=-DUSE_DFU_BOOTLD
@@ -34,26 +34,25 @@ else
         USB_CDC_CLASS=1
     endif
 endif 
-           
 
 
 CONTIKI_TARGET_DIRS = . apps dev 
 
 ifeq ($(USE_LORAFAB_RESTART_RX_AFTER_TX),1)
-	CFLAGS+=-DLORAFAB_RESTART_RX_AFTER_TX	
+  CFLAGS+=-DLORAFAB_RESTART_RX_AFTER_TX	
 endif 
 
 ifeq ($(USE_LORA_1272_RADIO),1)
-  APPS_FILE += sx1272.c sx1272-board.c spi.c sx1272_contiki_radio.c
+  APPS_FILE += sx1272.c sx1272-board.c spi.c sx1272_contiki_radio.c layer802154_radio_lora.c frame802154_lora.c
   CONTIKI_TARGET_DIRS += apps/sx1272
 endif
 
-APPS_FILE +=   arduino_spi.c arduino_cmd.c status_led.c
+APPS_FILE +=   arduino_spi.c arduino_cmd.c status_led.c debug_on_arduino.c
 CONTIKI_TARGET_DIRS += apps/arduino_interface apps/status_led
 
 
   ifndef CONTIKI_TARGET_MAIN
-  CONTIKI_TARGET_MAIN = contiki-main.c 
+  CONTIKI_TARGET_MAIN = contiki-main.c
   endif
 
 CONTIKI_TARGET_SOURCEFILES += $(CONTIKI_TARGET_MAIN) $(APPS_FILE) $(DEV_FILE)
@@ -65,7 +64,7 @@ include $(CONTIKI)/cpu/arm/stm32f103/Makefile.stm32f103
 #contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}
 
 ifeq ($(UIP_CONF_IPV6),1)
-CFLAGS += -DWITH_UIP6=1
+  CFLAGS += -DWITH_UIP6=1
 endif
 
 ifndef BASE_IP

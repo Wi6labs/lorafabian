@@ -71,25 +71,34 @@ extern u8 * arduino_read_buf;
 extern u16 arduino_read_buf_len;
 
 // Arduino commands
-#define ARDUINO_CMD_AVAILABLE 0x00
-#define ARDUINO_CMD_READ      0x01
-#define ARDUINO_CMD_WRITE     0x02
-#define ARDUINO_CMD_TEST      0x03 
-#define ARDUINO_CMD_FREQ      0x04 
-#define ARDUINO_CMD_RF_CFG    0x05
-#define ARDUINO_CMD_LAST_SNR  0x06
-#define ARDUINO_CMD_LAST_RSSI 0x07
+#define ARDUINO_CMD_AVAILABLE  0x00
+#define ARDUINO_CMD_READ       0x01
+#define ARDUINO_CMD_WRITE      0x02
+
+#define ARDUINO_CMD_DEBUG      0x20
+#define ARDUINO_CMD_HOSTNAME   0x21
+
+#define ARDUINO_CMD_FREQ       0x30
+#define ARDUINO_CMD_GET_FREQ   0x31
+#define ARDUINO_CMD_RF_CFG     0x32
+#define ARDUINO_CMD_BW_CFG     0x33
+#define ARDUINO_CMD_GET_BW_CFG 0x34
+#define ARDUINO_CMD_SF_CFG     0x35
+#define ARDUINO_CMD_GET_SF_CFG 0x36
+#define ARDUINO_CMD_CR_CFG     0x37
+#define ARDUINO_CMD_GET_CR_CFG 0x38
+#define ARDUINO_CMD_LAST_SNR   0x39
+#define ARDUINO_CMD_LAST_RSSI  0x3A
+
+#define ARDUINO_CMD_TEST       0xFF 
 
 // Command status
-#define ARDUINO_CMD_STATUS_OK									0x80
+#define ARDUINO_CMD_STATUS_OK                 0x80
 #define ARDUINO_CMD_STATUS_NO_DATA_AVAILABLE  0x01
 #define ARDUINO_CMD_STATUS_UNKNOWN            0x02 
 #define ARDUINO_CMD_STATUS_LENGTH_MISMATCH    0x03
 
 #define ARDUINO_CMD_STATUS_NO_STATUS          0xAA 
-
-
-
 
 void set_arduino_read_buf(u8 * buf, u16 len);
 void set_last_cmd_status(u8 status);

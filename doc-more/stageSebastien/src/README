@@ -1,0 +1,2 @@
+To compile the documentation, you need latex and minted.
+Compile with : pdflatex --shell-escape filename.tex

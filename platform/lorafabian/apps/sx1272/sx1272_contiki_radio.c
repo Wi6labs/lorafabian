@@ -54,7 +54,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 Description: Contiki radio interfec implementation for sx1272
------------------------------------------------------------------------------*/                                                             
+-----------------------------------------------------------------------------*/
+                                                       
 #include <stdio.h>
 #include <string.h>
 #include "contiki.h"
@@ -64,14 +65,12 @@ Description: Contiki radio interfec implementation for sx1272
 #include "arduino_spi.h"
 #include "status_led.h"
 #include "sx1272.h"
+#include "packetbuf.h"
 
 int8_t rx_last_snr_g = 0;
 int8_t rx_last_rssi_g = 0;
 
 static int pending_packets = 0;
-
-static uint8_t rx_msg_buf[RX_BUFFER_SIZE];
-static uint16_t rx_msg_size = 0;
 
 static int tx_ongoing =0;
 
@@ -91,40 +90,26 @@ void OnTxDone( void )
 }
 void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 {
-   int i;
-   
-	 rx_msg_size = size;
-	 memcpy( rx_msg_buf, payload, rx_msg_size);
-	  
-	 status_led_rx_on(TRUE);
+  int i;  
+  status_led_rx_on(TRUE);
+  pending_packets = 1;
 
-	 // indicate buffer to arduino interface
-	 set_arduino_read_buf(rx_msg_buf, rx_msg_size);
-	
-	 pending_packets ++;
+  packetbuf_clear();
+  packetbuf_set_datalen(size);
+  int l = packetbuf_copyfrom(payload, size);
 
-		if (pending_packets > 1) {
-//			printf("WARNING: Previous RX msg lost\n\r");
-		
-			pending_packets = 1;
-		}
-
-   // save Rssi and SNR
+  // save Rssi and SNR
   rx_last_snr_g = snr;
   rx_last_rssi_g = rssi;
-	 
-	 printf("RX received, size: %d RSSI: %d, SNR: %d\n\r", rx_msg_size, rssi, snr);
-	 for (i = 0; i<rx_msg_size; i++) 
-		 printf("%02x", rx_msg_buf[i] );
 
-	 printf("\n\r");
+  printf("RX received, size: %d RSSI: %d, SNR: %d\n\r", l, rssi, snr);
+  for (i = 0; i < l; i++) 
+    printf("%02x", payload[i] );
+  printf("\n\r");
 
-//   printf("REG_LR_FIFOADDRPTR %d REG_LR_FIFORXCURRENTADDR %d\n\r", SX1272Read(REG_LR_FIFOADDRPTR), SX1272Read(REG_LR_FIFORXCURRENTADDR) ) ;
-
- 	 // Reset RX to redo startup calibrations
-	 lora_radio_driver.off();
-   lora_radio_driver.on();
-	
+  // Reset RX to redo startup calibrations
+  lora_radio_driver.off();
+  lora_radio_driver.on();	
 }
 
 void OnTxTimeout( void )
@@ -245,21 +230,12 @@ radio_off(void)
 static int
 radio_read(void *buf, unsigned short bufsize)
 {
-	if (pending_packets > 0) {
-	  pending_packets --;
-
-	  if (bufsize < rx_msg_size) {
-			printf("Error, rx buffer size too small\n\r");
-			 return 0;
-		}
-		else {
-			memcpy(buf, rx_msg_buf, rx_msg_size);
-			return rx_msg_size;
-		}
-
-	
-	}
-
+  if (pending_packets > 0) {
+    pending_packets --;
+    buf = packetbuf_dataptr();
+    bufsize = packetbuf_totlen();
+    return packetbuf_totlen();
+  }
   return 0;
 }
 
@@ -305,9 +281,8 @@ transmit_packet(unsigned short len)
 static int
 radio_send(const void *payload, unsigned short payload_len)
 {
-	prepare_packet(payload, payload_len);
-	transmit_packet(payload_len);
-
+  prepare_packet(payload, payload_len);
+  transmit_packet(payload_len);
   return RADIO_TX_OK;
 
 }
@@ -323,10 +298,6 @@ pending_packet(void)
 {
   return pending_packets;
 }
-
-
-
-
 
 const struct radio_driver lora_radio_driver = {
     init,
