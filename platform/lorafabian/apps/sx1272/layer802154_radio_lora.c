@@ -12,6 +12,7 @@
 #include "frame802154_lora.h"
 #include "sx1272_contiki_radio.h"
 #include "packetbuf.h"
+#include "contiki-conf.h"
 
 int
 layer802154_init(void)
@@ -38,11 +39,12 @@ layer802154_off(void)
 frame802154_lora_t
 layer802154_read()
 {
+  packetbuf_clear();
   uint8_t* datapb = packetbuf_dataptr();
   frame802154_lora_t frame;
-  int bufsize;
-  uint8_t* buf;
-  int size = lora_radio_driver.read(buf, bufsize);
+  packetbuf_set_datalen(PACKETBUF_CONF_SIZE); //Because we don't know the size of the packet
+  int size = lora_radio_driver.read(datapb, packetbuf_totlen());
+  packetbuf_set_datalen(size); //Adjust the size
   int headerSize = frame802154_lora_parse(datapb, size, &frame);
   frame.payload_len = size-headerSize;
   frame.header_len = headerSize;
