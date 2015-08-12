@@ -42,7 +42,7 @@ channel configured in sx1272_contiki_radio.c
 #include "debug_on_arduino.h"
 #include "er-coap.h"
 #include "er-coap-constants.h"
-
+#include "frame_manager.h"
 #include "frame802154_lora.h"
 #include "cfs/cfs.h"
 #include <string.h>
@@ -55,6 +55,11 @@ char coap_payload_beacon[150];
 
 static int is_associated = 0;
 static int is_beacon_receive = 0;
+
+void frame_manager_init()
+{
+  process_start(&lorafab_bcn_process, NULL);
+}
 
 /**
  * \brief: update the hostname with /HOSTNAME file
@@ -155,7 +160,6 @@ int respond_if_coap_beacon(u8 rx_msg[], int size) {
 
 /*---------------------------------------------------------------------------*/
 PROCESS(lorafab_bcn_process, "LoRaFabian Beacon process");
-AUTOSTART_PROCESSES(&lorafab_bcn_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(lorafab_bcn_process, ev, data) {
   PROCESS_BEGIN();

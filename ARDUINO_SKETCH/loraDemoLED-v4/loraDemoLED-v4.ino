@@ -18,11 +18,17 @@ void setup()
 
 void loop()
 {
-  delay(2000);
+  /*delay(10000);
+  byte tab[5] = {0x01,0x02,0x03,0x04,0x05};
+  lora.write(tab,5);
+  delay(10000);
+  byte tab2[6] = {0x01,0x02,0x03,0x04,0x05,0x06};
+  lora.write(tab2,6);*/
+  /**/delay(2000);
   int pktsize = lora.dataAvailable();
   if (pktsize > 0) {
     String msg = lora.read(true);
     if(msg != "") Serial.println("\nMessage: " + msg);
   }
-  else Serial.println("0");
+  else Serial.println("0");/**/
 }

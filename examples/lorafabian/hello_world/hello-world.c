@@ -40,6 +40,7 @@
 
 #include "contiki.h"
 #include "stm32f10x.h"
+#include "frame_manager.h"
 #include <stdio.h> /* For printf() */
 #include "status_led.h"
 
@@ -58,6 +59,7 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
+  frame_manager_init();
 
 
 	status_led_init();
@@ -78,8 +80,6 @@ PROCESS_THREAD(hello_world_process, ev, data)
 
 			status_led_rx_on(led_on);
 			status_led_tx_on(led_on);
-
-			printf( "Hello World !\n\r");
 
 			etimer_reset(&et_hello);
     }

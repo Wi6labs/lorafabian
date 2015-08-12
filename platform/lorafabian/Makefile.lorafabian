@@ -47,8 +47,8 @@ ifeq ($(USE_LORA_1272_RADIO),1)
   CONTIKI_TARGET_DIRS += apps/sx1272
 endif
 
-APPS_FILE +=   arduino_spi.c arduino_cmd.c status_led.c debug_on_arduino.c
-CONTIKI_TARGET_DIRS += apps/arduino_interface apps/status_led
+APPS_FILE +=   arduino_spi.c arduino_cmd.c status_led.c debug_on_arduino.c frame_manager.c
+CONTIKI_TARGET_DIRS += apps/arduino_interface apps/status_led apps/frame_manager
 
 
   ifndef CONTIKI_TARGET_MAIN

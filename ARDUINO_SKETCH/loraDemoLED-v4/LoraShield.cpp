@@ -28,6 +28,7 @@ void LoraShield::init()
 
   SPI.setBitOrder(MSBFIRST);   // By Default MSBFIRST,  we make this fact explicit.
 
+  _debug = false;
   delay(100);
 }
 
@@ -96,8 +97,7 @@ int LoraShield::dataAvailable()
 String LoraShield::read(bool verbose) {
   //Get packet into a buffer
   int sizePacket = dataAvailable();
-  unsigned char buf[sizePacket-13];
-  int j = 0;
+  unsigned char buf[sizePacket];
   for (int i = 0; i < sizePacket; i++) {
     digitalWrite(SS_PIN,LOW);
     //  READ BYTE CMD
@@ -105,10 +105,7 @@ String LoraShield::read(bool verbose) {
     delayMicroseconds(WAIT_TIME_BETWEEN_BYTES_SPI);
     int shield_status = SPI.transfer(ARDUINO_CMD_AVAILABLE);
     delayMicroseconds(WAIT_TIME_BETWEEN_BYTES_SPI);
-    // Store the received byte
-    if(i > 13)
-      j++;
-    buf[j] = SPI.transfer(ARDUINO_CMD_AVAILABLE);
+    buf[i] = SPI.transfer(ARDUINO_CMD_AVAILABLE);
     delayMicroseconds(WAIT_TIME_BETWEEN_BYTES_SPI);
     digitalWrite(SS_PIN,HIGH);
     delayMicroseconds(WAIT_TIME_BETWEEN_SPI_MSG);
@@ -117,47 +114,50 @@ String LoraShield::read(bool verbose) {
   if(verbose)
   {
     Serial.println("Packet received");
-    Serial.println(hex8ToString(buf, sizePacket - 13));
+    Serial.println(hex8ToString(buf, sizePacket));
   }
 
-  //Check crc
-  int rc;
-  int rspPktbufflen = 256;
-  unsigned char rspPktBuff[rspPktbufflen];
-
-  coap_packet_t pkt;
-  coap_packet_t rsppkt; 
-  size_t rsplen = sizeof(rspPktBuff);
+  if(!_debug)
+  {
+    //Check crc
+    int rc;
+    int rspPktbufflen = 256;
+    unsigned char rspPktBuff[rspPktbufflen];
   
-  Serial.println(hex8ToString(&pkt.hdr.ver, 1));
-
-  if (0 != (rc = coap_parse(&pkt, buf, sizePacket - 13))){
-    if(verbose)
-    {
-      Serial.print("Packet has a bad crc1: ");
-      Serial.println(rc);
+    coap_packet_t pkt;
+    coap_packet_t rsppkt; 
+    size_t rsplen = sizeof(rspPktBuff);
+    
+    Serial.println(hex8ToString(&pkt.hdr.ver, 1));
+  
+    if (0 != (rc = coap_parse(&pkt, buf, sizePacket))){
+      if(verbose)
+      {
+        Serial.print("Packet has a bad crc1: ");
+        Serial.println(rc);
+      }
+      return "";
     }
-    return "";
+  
+    uint8_t scratch_raw[32];
+    coap_rw_buffer_t scratch_buf = {scratch_raw, sizeof(scratch_raw)};
+    coap_handle_req(&scratch_buf, &pkt, &rsppkt);    
+    memset(rspPktBuff, 0, rspPktbufflen);
+  
+    if (0 != (rc = coap_build(rspPktBuff, &rsplen, &rsppkt))){
+      if(verbose)
+      {
+        Serial.print("Packet has a bad crc2: ");
+        Serial.println(rc);
+      }
+      return "";
+    }
+  
+    //Send packet to Shield
+    write(rspPktBuff,rsplen);
   }
 
-  uint8_t scratch_raw[32];
-  coap_rw_buffer_t scratch_buf = {scratch_raw, sizeof(scratch_raw)};
-  coap_handle_req(&scratch_buf, &pkt, &rsppkt);    
-  memset(rspPktBuff, 0, rspPktbufflen);
-
-  if (0 != (rc = coap_build(rspPktBuff, &rsplen, &rsppkt))){
-    if(verbose)
-    {
-      Serial.print("Packet has a bad crc2: ");
-      Serial.println(rc);
-    }
-    return "";
-  }
-
-  //Send packet to Shield
-  write(rspPktBuff,rsplen);
-
-  return hex8ToString(buf, sizePacket - 13);
+  return hex8ToString(buf, sizePacket);
 }
 
 /**
@@ -198,6 +198,7 @@ void LoraShield::write(byte buff[], int bufflen) {
  */
 void LoraShield::getContikiDebug(bool getcontikidebug)
 {
+  _debug = getcontikidebug;
   digitalWrite(SS_PIN, LOW);
   int length = sizeof(0x01);
 

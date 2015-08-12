@@ -95,12 +95,10 @@ void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 {
   int i;
   rx_msg_size = size;
-  memcpy( rx_msg_buf, payload, rx_msg_size);
+  memcpy(rx_msg_buf, payload, rx_msg_size);
 
   status_led_rx_on(TRUE);
 
-  // indicate buffer to arduino interface
-  set_arduino_read_buf(rx_msg_buf, rx_msg_size);
   pending_packets = 1;
 
   // save Rssi and SNR

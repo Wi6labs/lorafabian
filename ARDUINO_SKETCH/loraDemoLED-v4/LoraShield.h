@@ -110,6 +110,7 @@ class LoraShield
 
   private:
     String hex8ToString(uint8_t *data, uint8_t length);
+    boolean _debug;
 };
 
 #endif

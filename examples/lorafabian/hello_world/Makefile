@@ -12,5 +12,9 @@ USE_LORA_1272_RADIO = 1
 
 #UIP_CONF_IPV6=1
 #APPS = serial-shell
+
+APPS += er-coap
+APPS += rest-engine
+
 CONTIKI = ../../..
 include $(CONTIKI)/Makefile.include
