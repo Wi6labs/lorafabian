@@ -81,7 +81,7 @@ So the contiki board will receive a packet like :
 \subsection{Change the name}
 The parsing of the previous packet is defined in the\\ \emph{/platform/lorafabian/apps/arduino\_interface/arduino\_cmd.c} file. The program waits a ARDUINO\_CMD\_HOSTNAME and write the new name in the file: \emph{/HOSTNAME\_LORA}.
 \subsection{Get the current name}
-The current name is written in the file \emph{/HOSTNAME\_LORA}. This is an example of a function which get the current name (updateHOSTNAME() in the file\\ \emph{/examples/lorafabian/lorafab\_beacon\_answer\_new/lorafab\_beacon\_answer\_new.c}):
+The current name is written in the file \emph{/HOSTNAME\_LORA}. This is an example of a function which get the current name (updateHOSTNAME() in the file\\ \emph{/platform/lorafabian/apps/frame\_manager/frame\_manager.c}):
 \begin{minted}{c}
 #include "cfs/cfs.h"
 

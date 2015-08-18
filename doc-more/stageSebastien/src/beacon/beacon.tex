@@ -20,7 +20,7 @@ In the actual code, we send the response to the first beacon received.\\
 So, at the beginning the node F doesn't have any beacon received and the authentication is not done yet. When the node R send a beacon, the node F start a random timer (30 sec max) and switch the value of \emph{is\_beacon\_receive} to 1 and when this timer is finish, send the response. The value of \emph{is\_associated} is 1.\\
 If the node F receive a new beacon, the node doesn't send any response.
 \section{Code}
-The main code is in \emph{/examples/lorafabian/lorafab\_beacon\_answer\_new/lorafab\_beacon\_answer\_new.c}:
+The main code is in \emph{/ platform/lorafabian/apps/frame\_manager/frame\_manager.c}:
 \begin{minted}{c}
 while(1) {
   PROCESS_WAIT_EVENT();
