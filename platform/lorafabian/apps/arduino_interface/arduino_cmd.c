@@ -106,6 +106,7 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 						// Turn off rx
 						layer802154_off();
 						// send packet to the broadcast (without the signalisation flag)
+						//The gateway is hardcoded because we do not parse the beacon yet
 						uint8_t destAddr[] = {0xfa,0x01,0x00,0x00,0x00,0x00,0x00,0x00};
 						layer802154_send(&arduino_cmd_buf[3], arduino_cmd_len - 3, destAddr, SIGNALISATION_OFF, DST_SHORT_FLAG);
 						// Turn On RX
