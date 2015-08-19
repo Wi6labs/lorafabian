@@ -13,7 +13,7 @@ void setup()
   Serial.println("Begin : " + host);
   lora.begin(host);
   Serial.println("Debug is off");
-  lora.getContikiDebug(false);
+  lora.setContikiDebug(false);
 }
 
 void loop()

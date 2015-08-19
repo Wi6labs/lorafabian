@@ -129,10 +129,10 @@ Read the length of the packet available on the SPI.
   \item \emph{Param: buff -} The payload
   \item \emph{Param: bufflen -} The length of the buffer
 \end{itemize}
-\subsection{void getContikiDebug(bool getcontikidebug)}
+\subsection{void setContikiDebug(bool setcontikidebug)}
 \begin{itemize}
   \item \emph{Description:} Get all radio packets receives on the Contiki.
-  \item \emph{Param: getcontikidebug -} if true, the contiki will send all packets (including signalisation packets and packets for other destinations).
+  \item \emph{Param: setcontikidebug -} if true, the contiki will send all packets (including signalisation packets and packets for other destinations).
 \end{itemize}
 \subsection{void setFreq(long freq)}
 \begin{itemize}
@@ -250,7 +250,7 @@ void setup()
   Serial.println("Begin : " + host);
   lora.begin(host);
   Serial.println("Debug is off");
-  lora.getContikiDebug(false);
+  lora.setContikiDebug(false);
   lora.setFreq(FREQ_8696);
   Serial.println("freq : " + String(lora.getFreq()));
   lora.setRFConfig(2);

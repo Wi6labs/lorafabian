@@ -119,10 +119,12 @@ coap_beacon_send_response() {
   int tx_buffer_index = coap_packet_size;
   printf("We are sending the response to the coap beacon\n\r");
 
-  //We must write a destination address on 8 bytes
-  uint8_t destAddr[] = {0xfa,0x01};
-  layer802154_send(tx_buffer, tx_buffer_index, destAddr, SIGNALISATION_ON, DST_SHORT_FLAG);
+  //Note: We don't parse the beacon message yet, so the GATEWAY_ADDR
+  //is defined in frame802154_lora.c
+  layer802154_send(tx_buffer, tx_buffer_index, GATEWAY_ADDR, SIGNALISATION_ON, DST_SHORT_FLAG);
 
+  //Note: We don't parse the beacon message yet, so we assume that
+  //the node is registered after the first response
   is_associated = 1;
 }
 
@@ -219,7 +221,7 @@ PROCESS_THREAD(lorafab_bcn_process, ev, data) {
               set_arduino_read_buf(frame.packet, packetSize);
           }
 
-      //To avoid collision
+          //To avoid collision
           if(respond_if_coap_beacon(frame.payload, size) && !is_associated)
           {
             is_beacon_receive = 1;

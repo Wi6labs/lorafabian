@@ -157,25 +157,31 @@ This is how to send a COAP message:
  */
 void
 coap_beacon_send_response() {
+  updateHOSTNAME();
   uint8_t tx_buffer[512];
 
   size_t coap_packet_size;
-  static coap_packet_t coap_request[1];
+  static coap_packet_t coap_request[1];      //This way the packet can be treated as pointer as usual.
 
   unsigned short random_a = random_rand();
-  coap_init_message(coap_request, COAP_TYPE_NON, COAP_POST, (coap_get_mid()+random_a)%65535);
-  int sizeMSG = sizeof(coap_payload_beacon);
-  while(coap_payload_beacon[sizeMSG-1] == 0x00 && sizeMSG-1 != 0)
-    --sizeMSG;
+  char MAC[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  getMac(MAC);
+  unsigned short random_b = random_a ^ MAC[sizeof(MAC)-1];
+  coap_init_message(coap_request, COAP_TYPE_NON, COAP_POST, (coap_get_mid()+random_b)%65535);
+  int sizeMSG = strlen(coap_payload_beacon);
   coap_set_payload(coap_request, (uint8_t *)coap_payload_beacon, sizeMSG);
 
   coap_packet_size = coap_serialize_message(coap_request, (void *)(tx_buffer ));
   int tx_buffer_index = coap_packet_size;
   printf("We are sending the response to the coap beacon\n\r");
 
-  //We must write a destination address on 8 bytes
-  uint8_t destAddr[] = {0xfa,0x01};
-  layer802154_send(tx_buffer, tx_buffer_index, destAddr, SIGNALISATION_ON, DST_SHORT_FLAG);
+  //Note: We don't parse the beacon message yet, so the GATEWAY_ADDR
+  //is defined in frame802154_lora.c
+  layer802154_send(tx_buffer, tx_buffer_index, GATEWAY_ADDR, SIGNALISATION_ON, DST_SHORT_FLAG);
+
+  //Note: We don't parse the beacon message yet, so we assume that
+  //the node is registered after the first response
+  is_associated = 1;
 }
 \end{minted}
 \end{document}

@@ -62,4 +62,7 @@ int frame802154_lora_hdrlen(frame802154_lora_t *p);
 int add_802_15_4_header(void *buf, uint8_t* destAddr, int signalisation, int dstShortSrcLongFlag);
 void getMac(uint8_t *buffer);
 
+extern const uint8_t HARDCODED_MAC[];
+extern const uint8_t GATEWAY_ADDR[];
+
 #endif

@@ -194,11 +194,11 @@ void LoraShield::write(byte buff[], int bufflen) {
 
 /**
  * \description: send a debug order to the contiki (to get all messages)
- * \param: getcontikidebug - if we want to receive all packets
+ * \param: setcontikidebug - if we want to receive all packets
  */
-void LoraShield::getContikiDebug(bool getcontikidebug)
+void LoraShield::setContikiDebug(bool setcontikidebug)
 {
-  _debug = getcontikidebug;
+  _debug = setcontikidebug;
   digitalWrite(SS_PIN, LOW);
   int length = sizeof(0x01);
 
@@ -214,7 +214,7 @@ void LoraShield::getContikiDebug(bool getcontikidebug)
   shield_status = SPI.transfer(length);
   delayMicroseconds(WAIT_TIME_BETWEEN_BYTES_SPI);
 
-  shield_status = getcontikidebug ? SPI.transfer(0x01) : SPI.transfer(0x00);
+  shield_status = setcontikidebug ? SPI.transfer(0x01) : SPI.transfer(0x00);
   delayMicroseconds(WAIT_TIME_BETWEEN_BYTES_SPI);
 
   digitalWrite(SS_PIN,HIGH); 

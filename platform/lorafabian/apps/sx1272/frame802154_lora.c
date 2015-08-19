@@ -1,6 +1,7 @@
 #include "frame802154_lora.h"
 
 const uint8_t HARDCODED_MAC[] = {0xfa,0xb0,0x00,0x00,0x00,0x00,0x00,0x03};
+const uint8_t GATEWAY_ADDR[] = {0xfa,0x01};
 
 void getMac(uint8_t *buffer)
 {

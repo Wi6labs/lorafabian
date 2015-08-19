@@ -95,7 +95,7 @@ class LoraShield
     String read(bool verbose = false);
     void write(byte buff[], int bufflen);
 
-    void getContikiDebug(bool getcontikidebug);
+    void setContikiDebug(bool setcontikidebug);
 
     void setFreq(long freq);
     unsigned long getFreq();
