@@ -6,7 +6,19 @@
 
 #CODEPROP_SOURCES = codeprop-otf.c ram-segments.c
 
+APPS += er-coap rest-engine
 APPS_INCLUDE_PATH = $(CONTIKI)/apps/
+ifdef APPS
+  APPDS = ${wildcard ${foreach DIR, $(APPDIRS), ${addprefix $(DIR)/, $(APPS)}}} \
+             ${wildcard ${addprefix $(CONTIKI)/apps/, $(APPS)} \
+             ${addprefix $(CONTIKI)/platform/$(TARGET)/apps/, $(APPS)} \
+             $(APPS)}
+  APPINCLUDES = ${foreach APP, $(APPS), ${wildcard ${foreach DIR, $(APPDS), $(DIR)/Makefile.$(APP)}}}
+  -include $(APPINCLUDES)
+  APP_SOURCES = ${foreach APP, $(APPS), $($(APP)_src)}
+  DSC_SOURCES = ${foreach APP, $(APPS), $($(APP)_dsc)}
+  CONTIKI_SOURCEFILES += $(APP_SOURCES) $(DSC_SOURCES)
+endif
 
 CFLAGS += -ffunction-sections -I$(APPS_INCLUDE_PATH)
 LDFLAGS += -Wl,--gc-sections,--undefined=_reset_vector__,--undefined=InterruptVectors,--undefined=_copy_data_init__,--undefined=_clear_bss_init__,--undefined=_end_of_init__
@@ -56,10 +68,8 @@ CONTIKI_TARGET_DIRS += apps/arduino_interface apps/status_led apps/frame_manager
   endif
 
 CONTIKI_TARGET_SOURCEFILES += $(CONTIKI_TARGET_MAIN) $(APPS_FILE) $(DEV_FILE)
-# include $(CONTIKI)/platform/$(TARGET)/apps/Makefile.apps
 
 include $(CONTIKI)/cpu/arm/stm32f103/Makefile.stm32f103
-
 
 #contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}
 
