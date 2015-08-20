@@ -1,12 +1,7 @@
-#ifndef __CONTIKI_CONF_H__
-#define __CONTIKI_CONF_H__
+#ifndef CONTIKI_CONF_H
+#define CONTIKI_CONF_H
 
 #include <stdint.h>
-
-#ifdef PROJECT_CONF_H
-#include PROJECT_CONF_H
-#endif /* PROJECT_CONF_H */
-
 
 #define CCIF
 #define CLIF
@@ -17,6 +12,8 @@
 #define CLOCK_CONF_SECOND 100
 
 #define COFFEE_IO_SEMANTICS 1
+
+#define PACKETBUF_CONF_SIZE			512
 #if 0
 #define DEBUG 1
 /* #define DEBUG     */
@@ -112,4 +109,9 @@ typedef unsigned int uip_stats_t;
 #ifndef RAND_MAX
 #define RAND_MAX 0x7fff
 #endif /*RAND_MAX*/
+
+
+#ifdef PROJECT_CONF_H
+#include PROJECT_CONF_H
+#endif /* PROJECT_CONF_H */
 #endif /* __CONTIKI_CONF_H__ */

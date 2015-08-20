@@ -1,0 +1,271 @@
+\documentclass{article}
+%packages
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper]{geometry}
+\usepackage{minted}
+
+\title{Arduino interface for LoRa Fabian}
+\date{July 10th 2015}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\section{List of SPI messages}
+\subsection{ARDUINO\_CMD\_AVAILABLE (0x00)}
+Get the value on the SPI.\\
+On Available command, two bytes are returned to indicate the number of bytes
+available in the RX buffer.
+\subsection{ARDUINO\_CMD\_READ (0x01)}
+Send to the contiki a Read order to get the packet buffer.\\
+On Read command the byte read is returned.
+\subsection{ARDUINO\_CMD\_WRITE (0x02)}
+Send a payload on the LoRa network.\\
+This is the structure of a WRITE command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x02 & length\_msb & length\_lsb & payload\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_DEBUG (0x20)}
+Send a debug order to the shield.\\
+This is the structure of a DEBUG command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x20 & length\_msb & length\_lsb & 0x00 (off) or 0x01 (on)\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_HOSTNAME (0x21)}
+Send the name of the object to the shield.\\
+This is the structure of a HOSTNAME command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x21 & length\_msb & length\_lsb & hostname\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_GET\_MAC (0x22)}
+Ask the board to send its MAC.
+This is the structure of a GET\_MAC command packet:
+\begin{tabular}{|c|}
+\hline
+0x22\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_FREQ (0x30)}
+Send the new frequency to the shield.\\
+This is the structure of a FREQ command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x30 & length\_msb & length\_lsb & freq (on 4 bytes)\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_GET\_FREQ (0x31)}
+Ask to write the frequency of the shield on the SPI. When the shield receives this order, it writes the frequency on four bytes length on the SPI. You can see the \emph{getFreq()} function for an example.
+\subsection{ARDUINO\_CMD\_RF\_CFG (0x32)}
+Send the new config to the shield.\\
+This is the structure of a RF\_CFG command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x32 & length\_msb & length\_lsb & rfconfig\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_BW\_CFG (0x33)}
+Send the new bandwidth to the shield.\\
+This is the structure of a BW\_CFG command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x33 & length\_msb & length\_lsb & bw\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_GET\_BW\_CFG (0x34)}
+Ask to write the bandwidth of the shield on the SPI. When the shield receives this order, it writes the current bandwidth on one byte on the SPI. You can see the \emph{getBandwidth()} function for an example.
+\subsection{ARDUINO\_CMD\_SF\_CFG (0x35)}
+Send the new spreading factor to the shield.\\
+This is the structure of a SF\_CFG command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x35 & length\_msb & length\_lsb & sf\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_GET\_SF\_CFG (0x36)}
+Ask to write the spreading factor of the shield on the SPI. When the shield receives this order, it writes the current spreading factor on one byte on the SPI. You can see the \emph{getSpreadingFactor()} function for an example.
+\subsection{ARDUINO\_CMD\_CR\_CFG (0x37)}
+Send the new coding rate to the shield.\\
+This is the structure of a CR\_CFG command packet:
+\begin{tabular}{|c|c|c|c|}
+\hline
+0x37 & length\_msb & length\_lsb & bw\\
+\hline
+\end{tabular}
+\subsection{ARDUINO\_CMD\_GET\_CR\_CFG (0x38)}
+Ask to write the coding rate of the shield on the SPI. When the shield receives this order, it writes the current coding rate on one byte on the SPI. You can see the \emph{getCodingRate()} function for an example.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{LoRa Fabian Arduino Library}
+LoRaShield class functions:
+\subsection{LoraShield()}
+The constructor.
+\subsection{void init()}
+Initialize the SPI.
+\subsection{int dataAvailable()}
+Read the length of the packet available on the SPI.
+\subsection{void begin(String name)}
+\begin{itemize}
+  \item \emph{Description:} This function tries to attach to a gateway from the LoRaFabian network.
+  \item \emph{Param: name -} The name of the node, example: "toto.s.ackl.io"
+\end{itemize}
+\subsection{String read(bool verbose = false)}
+\begin{itemize}
+  \item \emph{Description:} Read a packet on the SPI, check CRC and answer to a valid COAP request.
+  \item \emph{Param: verbose -} Print the payload and if the packet have a bad CRC.
+  \item \emph{Return:} The payload of the 802.15.4 packet received
+\end{itemize}
+\subsection{void write(byte buff[], int bufflen)}
+\begin{itemize}
+  \item \emph{Description:} Send a packet
+  \item \emph{Param: buff -} The payload
+  \item \emph{Param: bufflen -} The length of the buffer
+\end{itemize}
+\subsection{void setContikiDebug(bool setcontikidebug)}
+\begin{itemize}
+  \item \emph{Description:} Get all radio packets receives on the Contiki.
+  \item \emph{Param: setcontikidebug -} if true, the contiki will send all packets (including signalisation packets and packets for other destinations).
+\end{itemize}
+\subsection{void setFreq(long freq)}
+\begin{itemize}
+  \item \emph{Description:} Change the frequency of the radio
+  \item \emph{Param: freq -} the new frequency. Must be between 863000000 and 870000000.
+\end{itemize}
+Some macros:
+\begin{itemize}
+  \item FREQ\_8680: 868000000
+  \item FREQ\_8681: 868100000
+  \item FREQ\_8682: 868200000
+  \item FREQ\_8683: 868300000
+  \item FREQ\_8695: 869500000
+  \item FREQ\_8696: 869600000
+  \item FREQ\_8698: 869800000
+  \item FREQ\_8699: 869900000
+  \item FREQ\_MIN: 863000000
+  \item FREQ\_MAX: 870000000
+  \item FREQ\_DEFAULT: FREQ\_MAX
+\end{itemize}
+
+\subsection{unsigned long getFreq()}
+Read the current frequency from the contiki.
+
+\subsection{void setBandwidth(int bw)}
+\begin{itemize}
+  \item \emph{Description:} Change the bandwidth of the radio
+  \item \emph{Param: bw -} the new bandwidth. Must be a following value : 0(125kHz), 1(250kHz), 2(500kHz)
+\end{itemize}
+Some macros:
+\begin{itemize}
+  \item BW\_MIN     0
+  \item BW\_MAX     2
+  \item BW\_DEFAULT 1
+\end{itemize}
+
+\subsection{int getBandwidth()}
+Read the current bandwidth from the contiki.
+
+\subsection{void setCodingRate(int cr)}
+\begin{itemize}
+  \item \emph{Description:} Change the coding rate of the radio
+  \item \emph{Param: cr -} the new coding rate. Must be a following value : 1(4/5), 2(4/6), 3(4/7), 4(4/8)
+\end{itemize}
+Some macros:
+\begin{itemize}
+  \item CR\_MIN     1
+  \item CR\_MAX     4
+  \item CR\_DEFAULT CR\_MIN
+\end{itemize}
+
+\subsection{int getCodingRate()}
+Read the current coding rate from the contiki.
+
+\subsection{void setSpreadingFactor(int sf)}
+\begin{itemize}
+  \item \emph{Description:} Change the spreading factor of the radio
+  \item \emph{Param: sf -} the new spreading factor. Must be between 7 and 12
+\end{itemize}
+Some macros:
+\begin{itemize}
+  \item SF\_MIN     7
+  \item SF\_MAX     12
+  \item SF\_DEFAULT SF\_MIN
+\end{itemize}
+
+\subsection{int getSpreadingFactor()}
+Read the current spreading factor from the contiki board.
+
+\subsection{void setRFConfig(int rfconfig)}
+\begin{itemize}
+  \item \emph{Description:} Change the whole configuration of the radio (spreading factor, bandwidth, coding rate)
+  \item \emph{Param: rfconfig -} the new configuration. Must be between 0 and 4.
+\end{itemize}
+Some macros:
+\begin{itemize}
+  \item CONF\_MIN     0
+  \item CONF\_MAX     4
+  \item CONF\_DEFAULT CONF\_MIN
+\end{itemize}
+The configuration choice:\\
+\begin{tabular}{|c|c|c|c|}
+\hline
+& SF & CR & BW\\
+\hline
+0 & 7 & 1 & 0\\
+\hline
+1 & 9 & 2 & 1\\
+\hline
+2 & 11 & 3 & 2\\
+\hline
+3 & 12 & 4 & 2\\
+\hline
+4 & 12 & 3 & 0\\
+\hline
+\end{tabular}
+
+\subsection{String getMAC()}
+Get a String object which contains the MAC address of the board.
+
+\section{Example}
+\begin{minted}{c}
+#include "LoraShield.h"
+#include <SPI.h>
+
+LoraShield lora;
+void setup()
+{
+  Serial.begin(9600);
+  while (!Serial); // wait for serial port to connect. Needed for Leonardo only
+  
+  Serial.println("Initialisation du Shield");
+  lora.init();
+  String host = "toto.s.ackl.io";
+  Serial.println("Begin : " + host);
+  lora.begin(host);
+  Serial.println("Debug is off");
+  lora.setContikiDebug(false);
+  lora.setFreq(FREQ_8696);
+  Serial.println("freq : " + String(lora.getFreq()));
+  lora.setRFConfig(2);
+}
+
+void loop()
+{
+  delay(2000);
+  int pktsize = lora.dataAvailable();
+  if (pktsize > 0) {
+    String msg = lora.read(true);
+    if(msg != "") Serial.println("\nMessage: " + msg);
+  }
+  else Serial.println("0");
+}
+\end{minted}
+\end{document}
+

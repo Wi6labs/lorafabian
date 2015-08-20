@@ -1,0 +1,146 @@
+#include <stdbool.h>
+#include <string.h>
+#include "coap.h"
+
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
+const uint16_t rsplen=50;
+static char rsp[50] = "";
+void build_rsp(void);
+
+bool ledstatus;
+
+#ifdef ARDUINO
+static int led = 7;
+void endpoint_setup(void)
+{                
+    pinMode(led, OUTPUT);     
+    build_rsp();
+}
+#else
+#include <stdio.h>
+void endpoint_setup(void)
+{
+    build_rsp();
+}
+#endif
+
+//endpoint_setup();
+
+static const coap_endpoint_path_t path_well_known_core = {2, {".well-known", "core"}};
+static int handle_get_well_known_core(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+    return coap_make_response(scratch, outpkt, (const uint8_t *)rsp, strlen(rsp), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_LINKFORMAT);
+}
+
+
+static const coap_endpoint_path_t path_led = {1, {"led"}};
+
+static int handle_get_led(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+  Serial.print("led ");
+  Serial.println(ledstatus);
+  
+  char* ledmsg;
+  if (ledstatus) 
+    ledmsg = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><img src=\"http://enconn.fr/demo/img/ledon.jpg\" /></html>";
+  else
+    ledmsg = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><img src=\"http://enconn.fr/demo/img/ledoff.jpg\" /></html>";
+  
+  return coap_make_response(scratch, outpkt, (const uint8_t *)ledmsg, strlen(ledmsg), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_XML);
+}
+
+static const coap_endpoint_path_t path_led_on = {1, {"ledon"}};
+
+static int handle_get_led_on(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+  Serial.println("led on!");
+  digitalWrite(led, HIGH);
+  
+  ledstatus = true;  
+  char ledonmsg[] = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><center><h1> Led On ! </h1></center></html>";  
+  
+  return coap_make_response(scratch, outpkt, (const uint8_t *)ledonmsg, strlen(ledonmsg), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_XML);
+}
+
+static const coap_endpoint_path_t path_led_off = {1, {"ledoff"}};
+
+static int handle_get_led_off(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+  Serial.println("led off!");  
+  digitalWrite(led, LOW);
+  
+  ledstatus = false;  
+  char ledoffmsg[] = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><center><h1> Led Off ! </h1></center></html>";
+  
+  return coap_make_response(scratch, outpkt, (const uint8_t *)ledoffmsg, strlen(ledoffmsg), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_XML);    
+}
+
+
+static const coap_endpoint_path_t path_helloWorld = {1, {"helloWorld"}};
+
+static int handle_get_helloWorld(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+{
+  Serial.println("hello World!");
+  
+  char hellomsg[] = "<html xmlns=\"http://www.w3.org/1999/xhtml\"><center><h1> Hello World :) </h1></center></html>";
+  
+  return coap_make_response(scratch, outpkt, (const uint8_t *)hellomsg, strlen(hellomsg), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_XML);
+}
+
+
+const coap_endpoint_t endpoints[] =
+{
+    {COAP_METHOD_GET, handle_get_well_known_core, &path_well_known_core, "ct=40"},
+    {COAP_METHOD_GET, handle_get_led, &path_led, "ct=0"},    
+    {COAP_METHOD_GET, handle_get_led_on, &path_led_on, "ct=0"},
+    {COAP_METHOD_GET, handle_get_led_off, &path_led_off, "ct=0"},
+    {COAP_METHOD_GET, handle_get_helloWorld, &path_helloWorld, "ct=0"},
+    {(coap_method_t)0, NULL, NULL, NULL}
+};
+
+void build_rsp(void)
+{
+    uint16_t len = rsplen;
+    const coap_endpoint_t *ep = endpoints;
+    int i;
+
+    len--; // Null-terminated string
+
+    while(NULL != ep->handler)
+    {
+        if (NULL == ep->core_attr) {
+            ep++;
+            continue;
+        }
+
+        if (0 < strlen(rsp)) {
+            strncat(rsp, ",", len);
+            len--;
+        }
+
+        strncat(rsp, "<", len);
+        len--;
+
+        for (i = 0; i < ep->path->count; i++) {
+            strncat(rsp, "/", len);
+            len--;
+
+            strncat(rsp, ep->path->elems[i], len);
+            len -= strlen(ep->path->elems[i]);
+        }
+
+        strncat(rsp, ">;", len);
+        len -= 2;
+
+        strncat(rsp, ep->core_attr, len);
+        len -= strlen(ep->core_attr);
+
+        ep++;
+    }
+}
+

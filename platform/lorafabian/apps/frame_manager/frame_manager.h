@@ -55,57 +55,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Description: Arduino SPI interface
 -----------------------------------------------------------------------------*/                                                             
-#ifndef __ARDUINO_SPI_H__
-#define __ARDUINO_SPI_H__
+#ifndef __FRAME_MANAGER_H__
+#define __FRAME_MANAGER_H__
 
-void arduino_spi_init( void );
+void frame_manager_init();
 
-#define ARDUINO_CMD_BUF_MAX_LEN 256
+extern struct process lorafab_bcn_process;
 
-
-extern u8 arduino_cmd_buf[ARDUINO_CMD_BUF_MAX_LEN];
-extern u16 arduino_cmd_len;
-extern u8 shield_status ;
-extern u16 lora_data_available;
-extern u8 * arduino_read_buf;
-extern u16 arduino_read_buf_len;
-
-// Arduino commands
-#define ARDUINO_CMD_AVAILABLE  0x00
-#define ARDUINO_CMD_READ       0x01
-#define ARDUINO_CMD_WRITE      0x02
-
-#define ARDUINO_CMD_DEBUG      0x20
-#define ARDUINO_CMD_HOSTNAME   0x21
-#define ARDUINO_CMD_GET_MAC    0x22
-
-#define ARDUINO_CMD_FREQ       0x30
-#define ARDUINO_CMD_GET_FREQ   0x31
-#define ARDUINO_CMD_RF_CFG     0x32
-#define ARDUINO_CMD_BW_CFG     0x33
-#define ARDUINO_CMD_GET_BW_CFG 0x34
-#define ARDUINO_CMD_SF_CFG     0x35
-#define ARDUINO_CMD_GET_SF_CFG 0x36
-#define ARDUINO_CMD_CR_CFG     0x37
-#define ARDUINO_CMD_GET_CR_CFG 0x38
-#define ARDUINO_CMD_LAST_SNR   0x39
-#define ARDUINO_CMD_LAST_RSSI  0x3A
-
-#define ARDUINO_CMD_TEST       0xFF 
-
-// Command status
-#define ARDUINO_CMD_STATUS_OK                 0x80
-#define ARDUINO_CMD_STATUS_NO_DATA_AVAILABLE  0x01
-#define ARDUINO_CMD_STATUS_UNKNOWN            0x02 
-#define ARDUINO_CMD_STATUS_LENGTH_MISMATCH    0x03
-
-#define ARDUINO_CMD_STATUS_NO_STATUS          0xAA 
-
-void set_arduino_read_buf(u8 * buf, u16 len);
-void set_last_cmd_status(u8 status);
-
-
-extern struct process arduino_cmd_process;
-
-#endif // __ARDUINO_SPI_H__
+#endif // __FRAME_MANAGER_H__
 

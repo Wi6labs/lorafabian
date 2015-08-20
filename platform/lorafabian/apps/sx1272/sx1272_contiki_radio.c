@@ -54,7 +54,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 Description: Contiki radio interfec implementation for sx1272
------------------------------------------------------------------------------*/                                                             
+-----------------------------------------------------------------------------*/
+                                                       
 #include <stdio.h>
 #include <string.h>
 #include "contiki.h"
@@ -64,6 +65,7 @@ Description: Contiki radio interfec implementation for sx1272
 #include "arduino_spi.h"
 #include "status_led.h"
 #include "sx1272.h"
+#include "packetbuf.h"
 
 int8_t rx_last_snr_g = 0;
 int8_t rx_last_rssi_g = 0;
@@ -78,62 +80,48 @@ static int tx_ongoing =0;
 static RadioEvents_t RadioEvents;
 void OnTxDone( void )
 {
-	 // Reset RF state
-	 lora_radio_driver.off();
-	 printf("TX sent\n\r");
+   // Reset RF state
+   lora_radio_driver.off();
+   printf("TX sent\n\r");
    tx_ongoing =0;
    status_led_tx_on(FALSE);
 #ifdef LORAFAB_RESTART_RX_AFTER_TX
-		lora_radio_driver.on();
-		printf("Restart RX\n\r");
+    lora_radio_driver.on();
+    printf("Restart RX\n\r");
 #endif
 
 }
 void OnRxDone( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr )
 {
-   int i;
-   
-	 rx_msg_size = size;
-	 memcpy( rx_msg_buf, payload, rx_msg_size);
-	  
-	 status_led_rx_on(TRUE);
+  int i;
+  rx_msg_size = size;
+  memcpy(rx_msg_buf, payload, rx_msg_size);
 
-	 // indicate buffer to arduino interface
-	 set_arduino_read_buf(rx_msg_buf, rx_msg_size);
-	
-	 pending_packets ++;
+  status_led_rx_on(TRUE);
 
-		if (pending_packets > 1) {
-//			printf("WARNING: Previous RX msg lost\n\r");
-		
-			pending_packets = 1;
-		}
+  pending_packets = 1;
 
-   // save Rssi and SNR
+  // save Rssi and SNR
   rx_last_snr_g = snr;
   rx_last_rssi_g = rssi;
-	 
-	 printf("RX received, size: %d RSSI: %d, SNR: %d\n\r", rx_msg_size, rssi, snr);
-	 for (i = 0; i<rx_msg_size; i++) 
-		 printf("%02x", rx_msg_buf[i] );
 
-	 printf("\n\r");
+  printf("RX received, size: %d RSSI: %d, SNR: %d\n\r", rx_msg_size, rssi, snr);
+  for (i = 0; i < rx_msg_size; i++) 
+    printf("%02x", payload[i]);
+  printf("\n\r");
 
-//   printf("REG_LR_FIFOADDRPTR %d REG_LR_FIFORXCURRENTADDR %d\n\r", SX1272Read(REG_LR_FIFOADDRPTR), SX1272Read(REG_LR_FIFORXCURRENTADDR) ) ;
-
- 	 // Reset RX to redo startup calibrations
-	 lora_radio_driver.off();
-   lora_radio_driver.on();
-	
+  // Reset RX to redo startup calibrations
+  lora_radio_driver.off();
+  lora_radio_driver.on();  
 }
 
 void OnTxTimeout( void )
 {
-	printf("TX timeout\n\r");
-	tx_ongoing =0;
+  printf("TX timeout\n\r");
+  tx_ongoing =0;
 
 #ifdef LORAFAB_RESTART_RX_AFTER_TX
-		lora_radio_driver.on();
+    lora_radio_driver.on();
 #endif
 }
 
@@ -143,8 +131,8 @@ void OnRxTimeout( void )
 
 void OnRxError( void )
 {
-	printf("RX Error\n\r");
- 	
+  printf("RX Error\n\r");
+   
 }
 
 
@@ -165,11 +153,11 @@ PROCESS_THREAD(rx_reset_process, ev, data)
 
     if(ev == PROCESS_EVENT_TIMER) {
 
-			printf( "Reset RX\n\r");
+      printf( "Reset RX\n\r");
       // Reset RX to redo startup calibrations
-	    lora_radio_driver.off();
+      lora_radio_driver.off();
       lora_radio_driver.on();
-	
+  
     }
   }
   PROCESS_END();
@@ -191,8 +179,8 @@ init(void)
   RadioEvents.TxTimeout = OnTxTimeout;
   RadioEvents.RxTimeout = OnRxTimeout;
   RadioEvents.RxError = OnRxError;
-	
-	Radio.Init(&RadioEvents);
+  
+  Radio.Init(&RadioEvents);
 
   Radio.SetChannel( RF_FREQUENCY );
 
@@ -210,7 +198,7 @@ init(void)
           RF_FREQUENCY, TX_OUTPUT_POWER, LORA_BANDWIDTH,
           LORA_SPREADING_FACTOR, LORA_CODINGRATE); 
 
-	pending_packets = 0;
+  pending_packets = 0;
 
   process_start(&rx_reset_process, NULL);
 
@@ -222,12 +210,12 @@ return 1;
 static int
 radio_on(void)
 {
-	// Start infinite RX	
+  // Start infinite RX  
   Radio.Rx( 0 );
-	// Start reset timer
-	 etimer_set(&et_reset_rx, RESET_RX_DURATION );
-	 // assign it to correct process
-	 et_reset_rx.p = &rx_reset_process;
+  // Start reset timer
+   etimer_set(&et_reset_rx, RESET_RX_DURATION );
+   // assign it to correct process
+   et_reset_rx.p = &rx_reset_process;
 
   return 1;
 }
@@ -235,31 +223,27 @@ radio_on(void)
 static int
 radio_off(void)
 {
-	// stop reset timer
-	etimer_stop(&et_reset_rx); 
+  // stop reset timer
+  etimer_stop(&et_reset_rx); 
   Radio.Sleep();
-	return 1;
+  return 1;
 }
 
 /*---------------------------------------------------------------------------*/
 static int
 radio_read(void *buf, unsigned short bufsize)
 {
-	if (pending_packets > 0) {
-	  pending_packets --;
-
-	  if (bufsize < rx_msg_size) {
-			printf("Error, rx buffer size too small\n\r");
-			 return 0;
-		}
-		else {
-			memcpy(buf, rx_msg_buf, rx_msg_size);
-			return rx_msg_size;
-		}
-
-	
-	}
-
+  if (pending_packets > 0) {
+    pending_packets --;
+    if (bufsize < rx_msg_size) {
+      printf("Error, rx buffer size too small\n\r");
+      return 0;
+    }
+    else {
+      memcpy(buf, rx_msg_buf, rx_msg_size);
+      return rx_msg_size;
+    }
+  }
   return 0;
 }
 
@@ -267,7 +251,7 @@ radio_read(void *buf, unsigned short bufsize)
 static int
 channel_clear(void)
 {
-	return Radio.IsChannelFree(MODEM_LORA, RF_FREQUENCY, LORA_CLEAR_CHANNEL_RSSI_THRESHOLD);
+  return Radio.IsChannelFree(MODEM_LORA, RF_FREQUENCY, LORA_CLEAR_CHANNEL_RSSI_THRESHOLD);
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t *tx_msg_ptr = NULL;
@@ -275,39 +259,36 @@ static uint16_t tx_msg_size = 0;
 static int
 prepare_packet(const void *data, unsigned short len)
 {
-	tx_msg_ptr = (uint8_t *) data;
-	tx_msg_size = len;
+  tx_msg_ptr = (uint8_t *) data;
+  tx_msg_size = len;
   return 0;
 }
 /*---------------------------------------------------------------------------*/
 static int
 transmit_packet(unsigned short len)
 {
-		if (tx_msg_ptr != NULL && tx_msg_size != 0) {
-			if (!tx_ongoing) {
-				status_led_tx_on(TRUE);
-			  Radio.Send( tx_msg_ptr,  tx_msg_size);
+    if (tx_msg_ptr != NULL && tx_msg_size != 0) {
+      if (!tx_ongoing) {
+        status_led_tx_on(TRUE);
+        Radio.Send( tx_msg_ptr,  tx_msg_size);
 
-				tx_ongoing =1;
-			}
-			else {
-				printf("ERROR: TX already ongoing, message discarded\n\r");
-			}
-		}
-		else {
-			printf("ERROR: TX message empty\n\r");
-		}
-
-
+        tx_ongoing =1;
+      }
+      else {
+        printf("ERROR: TX already ongoing, message discarded\n\r");
+      }
+    }
+    else {
+      printf("ERROR: TX message empty\n\r");
+    }
   return 0;
 }
 /*---------------------------------------------------------------------------*/
 static int
 radio_send(const void *payload, unsigned short payload_len)
 {
-	prepare_packet(payload, payload_len);
-	transmit_packet(payload_len);
-
+  prepare_packet(payload, payload_len);
+  transmit_packet(payload_len);
   return RADIO_TX_OK;
 
 }
@@ -323,10 +304,6 @@ pending_packet(void)
 {
   return pending_packets;
 }
-
-
-
-
 
 const struct radio_driver lora_radio_driver = {
     init,
