@@ -73,6 +73,7 @@ static u8 lora_spreading_factor[LORA_CONFIG_NB] = {7, 9, 11, 12, 12};
 static u8 lora_coding_rate[LORA_CONFIG_NB]      = {1, 2,  3,  4,  3};
 
 
+static bool restart_rx = FALSE;
 
 PROCESS(arduino_cmd_process, "arduino cmd process");
 
@@ -81,7 +82,7 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 	u16 len;
 	u32 new_freq;
 	u8 rf_cfg_index;
-	bool restart_rx = FALSE;
+  u8 new_param;
 
   PROCESS_BEGIN();
   while( 1 )
@@ -154,7 +155,7 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 							LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
 							TRUE, LORA_IQ_INVERSION_ON, TRUE );
 
-					Radio.SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, lora_bw[rf_cfg_index],
+					Radio.SetTxConfig( MODEM_LORA, lora_current_tx_power, 0, lora_bw[rf_cfg_index],
 							lora_spreading_factor[rf_cfg_index], lora_coding_rate[rf_cfg_index],
 							LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
 							TRUE, LORA_IQ_INVERSION_ON, 3000000 );
@@ -163,22 +164,151 @@ PROCESS_THREAD(arduino_cmd_process, ev, data)
 							 lora_bw[rf_cfg_index], lora_spreading_factor[rf_cfg_index],
 							lora_coding_rate[rf_cfg_index]); 
 
-					if (restart_rx){
-						lora_radio_driver.on();
-					}
+          // save current configs
+          lora_current_sf       = lora_spreading_factor[rf_cfg_index];
+          lora_current_bw       = lora_bw[rf_cfg_index];
+          lora_current_cr       = lora_coding_rate[rf_cfg_index];
 
 					set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
 
 					break;
+				
+        case ARDUINO_CMD_SF:
+          new_param =  arduino_cmd_buf[3];
+          if (new_param < 6 || new_param > 12) {
+            printf("Spreading Factor out of range %d, must be between 6 and 12 included\n", new_param);   
+            set_last_cmd_status(ARDUINO_CMD_STATUS_PARAM_OUT_OF_RANGE);
+          }
+          else {
+            lora_current_sf = new_param;
 
-				default :
+            if ( SX1272GetStatus() == RF_RX_RUNNING ){
+              lora_radio_driver.off();
+              restart_rx = TRUE;
+            }
+
+            Radio.SetRxConfig( MODEM_LORA, lora_current_bw, lora_current_sf,
+                lora_current_cr, 0, LORA_PREAMBLE_LENGTH,
+                LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, TRUE );
+
+            Radio.SetTxConfig( MODEM_LORA, lora_current_tx_power, 0, lora_current_bw,
+                lora_current_sf, lora_current_cr,
+                LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, 3000000 );
+
+            printf("Spreading Factor changed: %d\n", lora_current_sf);   
+
+            set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+
+          }
+          break;
+
+          case ARDUINO_CMD_BW:
+          new_param = arduino_cmd_buf[3];
+          if (new_param < 0 || new_param > 2) {
+            printf("LoRa Band width out of range %d, must be between 0 and 2 included\n", new_param);   
+            set_last_cmd_status(ARDUINO_CMD_STATUS_PARAM_OUT_OF_RANGE);
+          }
+          else {
+            lora_current_bw = new_param;
+
+            if ( SX1272GetStatus() == RF_RX_RUNNING ){
+              lora_radio_driver.off();
+              restart_rx = TRUE;
+            }
+
+            Radio.SetRxConfig( MODEM_LORA, lora_current_bw, lora_current_sf,
+                lora_current_cr, 0, LORA_PREAMBLE_LENGTH,
+                LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, TRUE );
+
+            Radio.SetTxConfig( MODEM_LORA, lora_current_tx_power, 0, lora_current_bw,
+                lora_current_sf, lora_current_cr,
+                LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, 3000000 );
+
+            printf("Band Width changed: %d\n", lora_current_bw);   
+
+            set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+
+          }
+          break;
+        case ARDUINO_CMD_CR:
+          new_param =  arduino_cmd_buf[3];
+          if (new_param < 1 || new_param > 4) {
+            printf("Coding Rate out of range %d, must be between 1 and 4 included\n", new_param);   
+            set_last_cmd_status(ARDUINO_CMD_STATUS_PARAM_OUT_OF_RANGE);
+          }
+          else {
+            lora_current_cr = new_param;
+            
+            if ( SX1272GetStatus() == RF_RX_RUNNING ){
+              lora_radio_driver.off();
+              restart_rx = TRUE;
+            }
+            
+            Radio.SetRxConfig( MODEM_LORA, lora_current_bw, lora_current_sf,
+                lora_current_cr, 0, LORA_PREAMBLE_LENGTH,
+                LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, TRUE );
+
+            Radio.SetTxConfig( MODEM_LORA, lora_current_tx_power, 0, lora_current_bw,
+                lora_current_sf, lora_current_cr,
+                LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, 3000000 );
+
+            printf("Coding Rate changed: %d\n", lora_current_cr);   
+
+            set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+
+          }
+        break;
+        
+        case ARDUINO_CMD_TX_POW:
+          new_param =  arduino_cmd_buf[3];
+          if (new_param < 2 || new_param > 14) {
+            printf("TX Power out of range %d, must be between 2 and 14 included\n", new_param);   
+            set_last_cmd_status(ARDUINO_CMD_STATUS_PARAM_OUT_OF_RANGE);
+          }
+          else {
+            lora_current_tx_power = new_param;
+            if ( SX1272GetStatus() == RF_RX_RUNNING ){
+              lora_radio_driver.off();
+              restart_rx = TRUE;
+            }
+
+            Radio.SetRxConfig( MODEM_LORA, lora_current_bw, lora_current_sf,
+                lora_current_cr, 0, LORA_PREAMBLE_LENGTH,
+                LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, TRUE );
+
+            Radio.SetTxConfig( MODEM_LORA, lora_current_tx_power, 0, lora_current_bw,
+                lora_current_sf, lora_current_cr,
+                LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                TRUE, LORA_IQ_INVERSION_ON, 3000000 );
+
+            printf("TX power changed: %d\n", lora_current_tx_power);   
+
+            set_last_cmd_status(ARDUINO_CMD_STATUS_OK);
+
+          }
+
+
+        break;
+
+ 				default :
 					printf("SPI Command unknown: %d\n\r", arduino_cmd_buf[0]);
 					set_last_cmd_status(ARDUINO_CMD_STATUS_UNKNOWN);
 					break;
 
 			}
-		
-		
+
+			if (restart_rx){
+			  lora_radio_driver.on();
+        restart_rx = FALSE;
+			}
+
 		}
   }
  

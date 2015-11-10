@@ -68,6 +68,13 @@ Description: Contiki radio interfec implementation for sx1272
 int8_t rx_last_snr_g = 0;
 int8_t rx_last_rssi_g = 0;
 
+// Set current params to initial value
+uint8_t lora_current_sf       = LORA_SPREADING_FACTOR;
+uint8_t lora_current_bw       = LORA_BANDWIDTH;
+uint8_t lora_current_cr       = LORA_CODINGRATE;
+uint8_t lora_current_tx_power = TX_OUTPUT_POWER;
+
+
 static int pending_packets = 0;
 
 static uint8_t rx_msg_buf[RX_BUFFER_SIZE];
@@ -205,6 +212,11 @@ init(void)
                                  LORA_SPREADING_FACTOR, LORA_CODINGRATE,
                                  LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
                                  TRUE, LORA_IQ_INVERSION_ON, 3000000 );
+
+  lora_current_sf       = LORA_SPREADING_FACTOR;
+  lora_current_bw       = LORA_BANDWIDTH;
+  lora_current_cr       = LORA_CODINGRATE;
+  lora_current_tx_power = TX_OUTPUT_POWER;
 
   printf("Lora radio initialized with Freq %d TX output pwr %d, BW %d, SF %d, CR %d\n\r",
           RF_FREQUENCY, TX_OUTPUT_POWER, LORA_BANDWIDTH,

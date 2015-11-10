@@ -79,12 +79,17 @@ extern u16 arduino_read_buf_len;
 #define ARDUINO_CMD_RF_CFG    0x05
 #define ARDUINO_CMD_LAST_SNR  0x06
 #define ARDUINO_CMD_LAST_RSSI 0x07
+#define ARDUINO_CMD_SF        0x08
+#define ARDUINO_CMD_BW        0x09
+#define ARDUINO_CMD_CR        0x0a
+#define ARDUINO_CMD_TX_POW    0x0b
 
 // Command status
 #define ARDUINO_CMD_STATUS_OK									0x80
 #define ARDUINO_CMD_STATUS_NO_DATA_AVAILABLE  0x01
 #define ARDUINO_CMD_STATUS_UNKNOWN            0x02 
 #define ARDUINO_CMD_STATUS_LENGTH_MISMATCH    0x03
+#define ARDUINO_CMD_STATUS_PARAM_OUT_OF_RANGE 0x04
 
 #define ARDUINO_CMD_STATUS_NO_STATUS          0xAA 
 

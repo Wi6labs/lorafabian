@@ -63,6 +63,12 @@ extern const struct radio_driver lora_radio_driver;
 
 extern int8_t rx_last_snr_g;
 extern int8_t rx_last_rssi_g;
+
+extern uint8_t lora_current_sf;
+extern uint8_t lora_current_bw;
+extern uint8_t lora_current_cr;
+extern uint8_t lora_current_tx_power;
+
 #define RESET_RX_DURATION (1800 * CLOCK_SECOND)
 
 
