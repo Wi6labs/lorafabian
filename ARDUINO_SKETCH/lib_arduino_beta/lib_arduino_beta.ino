@@ -1,13 +1,34 @@
 void setup() {
   LoRa_init();
-  LoRa_RF_config(1);
+//  LoRa_RF_config(1);
  // LoRa_freq_channel(3);
 
+// Advanced LoRa user parameters :
+// Spreading factor
+//LoRa_SF(12);      // [7: SF7,
+                    //  8: SF8,
+                    //  9: SF9,
+                    // 10: SF10,
+                    // 11: SF11,
+                    // 12: SF12]
 
+// Band Width
+//LoRa_BW(2);       // [0: 125 kHz,
+                    //  1: 250 kHz,
+                    //  2: 500 kHz]
+
+// Coding rate
+//LoRa_CR(0);       // [1: 4/5,
+                    //  2: 4/6,
+                    //  3: 4/7,
+                    //  4: 4/8]
+
+// TX power
+LoRa_TX_Power(15);   // in dBm, range: [2:14]
   // Warning always perform Serial.begin after LoRa_init
   Serial.begin(9600);
 }
-/*
+
 // Send Example
 void loop () {
   LoRa_send("hehehe");
@@ -15,8 +36,8 @@ void loop () {
   delay(10000);
 }
 
-*/
 
+/*
 // Receive example
 void loop () {
   int avail;
@@ -44,4 +65,4 @@ void loop () {
   delay(100);
 }
 
-
+*/

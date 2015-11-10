@@ -217,4 +217,85 @@ int LoRa_last_rssi(){
        return int(rssi);  
 }
    
+// Set Spreading Factor
+void LoRa_SF(int in) {
+  digitalWrite(slaveSelectPin,LOW);
+  
+  // CFG cmd
+  SPI.transfer(0x08);
+  delay(1);  
+  SPI.transfer(0x00);
+  delay(1);
+  SPI.transfer(0x01);
+  delay(1);
+  SPI.transfer(in);
+  delay(1);
+  
+  // take the SS pin high to de-select the chip:
+  digitalWrite(slaveSelectPin,HIGH); 
+
+  delay(100);
+}
+
+// Set Band Width
+void LoRa_BW(int in) {
+  digitalWrite(slaveSelectPin,LOW);
+  
+  // CFG cmd
+  SPI.transfer(0x09);
+  
+  delay(1);  
+  SPI.transfer(0x00);
+  delay(1);
+  SPI.transfer(0x01);
+  delay(1);
+  SPI.transfer(in);
+  delay(1);
+  
+  // take the SS pin high to de-select the chip:
+  digitalWrite(slaveSelectPin,HIGH); 
+
+  delay(100);
+}
+
+// Set Coding Rate
+void LoRa_CR(int in) {
+
+
+  digitalWrite(slaveSelectPin,LOW);
+  // CFG cmd
+  SPI.transfer(0x0A);
+  delay(1);  
+  SPI.transfer(0x00);
+  delay(1);
+  SPI.transfer(0x01);
+  delay(1);
+  SPI.transfer(in);
+  delay(1);
+  
+  // take the SS pin high to de-select the chip:
+  digitalWrite(slaveSelectPin,HIGH); 
+
+  delay(100);
+}
+
+// Set TX Power
+void LoRa_TX_Power(int in) {
+
+  digitalWrite(slaveSelectPin,LOW);
+  // CFG cmd
+  SPI.transfer(0x0B);
+  delay(1);  
+  SPI.transfer(0x00);
+  delay(1);
+  SPI.transfer(0x01);
+  delay(1);
+  SPI.transfer(in);
+  delay(1);
+  
+  // take the SS pin high to de-select the chip:
+  digitalWrite(slaveSelectPin,HIGH); 
+
+  delay(100);
+} 
 
