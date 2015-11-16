@@ -4,8 +4,12 @@ void setup() {
  // LoRa_freq_channel(3);
 
   // Advanced LoRa user parameters :
+
+  // frequency
+  // LoRa_freq(868100000);
+  
   // Spreading factor
-  //LoRa_SF(12);      // [7: SF7,
+  // LoRa_SF(12);      // [7: SF7,
                       //  8: SF8,
                       //  9: SF9,
                       // 10: SF10,
@@ -13,7 +17,7 @@ void setup() {
                       // 12: SF12]
 
   // Band Width
-  //LoRa_BW(0);       // [0: 125 kHz,
+  // LoRa_BW(0);       // [0: 125 kHz,
                       //  1: 250 kHz,
                       //  2: 500 kHz]
 
@@ -24,7 +28,7 @@ void setup() {
                       //  4: 4/8]
 
   // TX power
-  //LoRa_TX_Power(15);   // in dBm, range: [2:14]
+  //LoRa_TX_Power(14);   // in dBm, range: [2:14]
 
   // Warning always perform Serial.begin after LoRa_init
   Serial.begin(9600);
