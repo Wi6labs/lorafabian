@@ -32,12 +32,13 @@ is_my_mac(frame802154_lora_t *frame)
   return 1;
 }
 
-//Verify is add correspond to the hardcoded_mac
+//Verify if the signalling bit is set in the src mac address of the received packet
 int
 is_signaling(frame802154_lora_t *frame)
 {
-  int i = frame->fcf._14_15_src_addr_mode == ADDRESS_16b_LENGTH ? 2 : 8;
-  return frame->src_addr[i] >> 3;
+  int i = frame->fcf._14_15_src_addr_mode == ADDRESS_16b_LENGTH ? 1 : 7;
+  // return 1 if MSB of last byte in src mac is set, else 0
+  return (frame->src_addr[i] & (0b10000000)); 
 }
 
 /**
