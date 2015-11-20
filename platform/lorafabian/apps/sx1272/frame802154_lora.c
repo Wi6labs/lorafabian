@@ -90,7 +90,7 @@ frame802154_lora_parse(uint8_t *data, int len, frame802154_lora_t *pf)
   int srcAddSize = (fcf._14_15_src_addr_mode == ADDRESS_16b_LENGTH)? 2:8;
   int j = 0;
   for(j; j < srcAddSize; ++j)
-    pf->src_addr[i] = p[j+i];
+    pf->src_addr[j] = p[j+i];
   p+= dstAddSize + srcAddSize;
     
   //header length
