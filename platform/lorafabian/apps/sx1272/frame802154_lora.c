@@ -14,21 +14,25 @@ is_broadcast_addr(frame802154_lora_t *frame)
 {
   if(frame->fcf._10_11_dst_addr_mode == ADDRESS_0b_LENGTH)
     return 1;
-  int i = frame->fcf._10_11_dst_addr_mode == ADDRESS_16b_LENGTH ? 2 : 8;
-  while(i-- > 0)
-    if(frame->dest_addr[i] != 0xff)
-      return 0;
-  return 1;
+  int i =0;
+  int dstAddSize = frame->fcf._10_11_dst_addr_mode == ADDRESS_16b_LENGTH ? 1 : 7;
+  for (i;i<dstAddSize;i++) {
+        if(frame->dest_addr[i] != 0xff)
+           return 0;
+   }
+   return 1;
 }
 
 //Verify is add correspond to the hardcoded_mac
 int
 is_my_mac(frame802154_lora_t *frame)
 {
-  int i = frame->fcf._10_11_dst_addr_mode == ADDRESS_16b_LENGTH ? 2 : 8;
-  while(i-- > 0)
+  int i = 0;
+  int dstAddSize = frame->fcf._10_11_dst_addr_mode == ADDRESS_16b_LENGTH ? 1 : 7;
+  for (i;i<dstAddSize;i++) {
     if(frame->dest_addr[i] != HARDCODED_MAC[i])
       return 0;
+  }
   return 1;
 }
 
@@ -38,7 +42,7 @@ is_signaling(frame802154_lora_t *frame)
 {
   int i = frame->fcf._14_15_src_addr_mode == ADDRESS_16b_LENGTH ? 1 : 7;
   // return 1 if MSB of last byte in src mac is set, else 0
-  return (frame->src_addr[i] & (0b10000000)); 
+  return ((frame->src_addr[i] & (0b10000000))>>7);
 }
 
 /**
