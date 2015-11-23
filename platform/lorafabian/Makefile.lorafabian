@@ -39,20 +39,24 @@ endif
 
 ifeq ($(USE_UART1_TRACE),1)
   CFLAGS+=-DUSE_UART1_TRACE
-  DEV_FILE += uart1.c 
+  DEV_FILE += uart1.c
 else
     ifeq ($(USE_USBCDC_TRACE),1)
         CFLAGS+=-DUSE_USBCDC_TRACE
         USB_CDC_CLASS=1
     endif
-endif 
+endif
 
 
-CONTIKI_TARGET_DIRS = . apps dev 
+CONTIKI_TARGET_DIRS = . apps dev
+
+# If this is not used after TX we will not listen to beacons (RX will be off):
+# For this version of the code we enable it by default, further use of this flag should be studied
+USE_LORAFAB_RESTART_RX_AFTER_TX = 1
 
 ifeq ($(USE_LORAFAB_RESTART_RX_AFTER_TX),1)
-  CFLAGS+=-DLORAFAB_RESTART_RX_AFTER_TX	
-endif 
+  CFLAGS+=-DLORAFAB_RESTART_RX_AFTER_TX
+endif
 
 ifeq ($(USE_LORA_1272_RADIO),1)
   APPS_FILE += sx1272.c sx1272-board.c spi.c sx1272_contiki_radio.c layer802154_radio_lora.c frame802154_lora.c
@@ -81,4 +85,4 @@ ifndef BASE_IP
 BASE_IP := 172.16.1.1
 endif
 
-MODULES += core/net core/net/mac 
+MODULES += core/net core/net/mac
