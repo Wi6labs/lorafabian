@@ -16,7 +16,7 @@ is_broadcast_addr(frame802154_lora_t *frame)
     return 1;
   int i =0;
   int dstAddSize = frame->fcf._10_11_dst_addr_mode == ADDRESS_16b_LENGTH ? 1 : 7;
-  for (i;i<dstAddSize;i++) {
+  for (i;i<=dstAddSize;i++) {
         if(frame->dest_addr[i] != 0xff)
            return 0;
    }
@@ -29,7 +29,7 @@ is_my_mac(frame802154_lora_t *frame)
 {
   int i = 0;
   int dstAddSize = frame->fcf._10_11_dst_addr_mode == ADDRESS_16b_LENGTH ? 1 : 7;
-  for (i;i<dstAddSize;i++) {
+  for (i;i<=dstAddSize;i++) {
     if(frame->dest_addr[i] != HARDCODED_MAC[i])
       return 0;
   }
