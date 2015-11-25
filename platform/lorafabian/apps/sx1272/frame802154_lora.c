@@ -32,12 +32,24 @@ is_my_mac(frame802154_lora_t *frame)
   return 1;
 }
 
-//Verify is add correspond to the hardcoded_mac
+// Verify if the signalling bit is set in the src mac address (only for short address for the moment, for other is not defined -we return zero-)
+
 int
 is_signaling(frame802154_lora_t *frame)
 {
-  int i = frame->fcf._14_15_src_addr_mode == ADDRESS_16b_LENGTH ? 2 : 8;
-  return frame->src_addr[i] >> 3;
+  int is_signaling = 0
+  
+  if (frame->fcf._14_15_src_addr_mode == ADDRESS_16b_LENGTH){
+  	
+  	is_signaling = frame->src_addr[1] >> 7; // Will be 1 or 0
+
+  } else {
+
+  	is_signaling = 0;
+
+  }
+
+  return is_signaling;
 }
 
 /**
