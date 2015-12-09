@@ -110,8 +110,14 @@ coap_beacon_send_response() {
   unsigned short random_a = random_rand();
   char MAC[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   getMac(MAC);
-  unsigned short random_b = random_a ^ MAC[sizeof(MAC)-1];
-  coap_init_message(coap_request, COAP_TYPE_NON, COAP_POST, (coap_get_mid()+random_b)%65535);
+
+  unsigned short random_b = random_a ^ MAC[sizeof(MAC)-1]; //
+  coap_init_message(coap_request, COAP_TYPE_CON, COAP_POST, (coap_get_mid()+random_b)%65535);
+
+  // CoAP message Response we sent /no n the uri-path :
+  coap_set_header_uri_path(coap_request, "n/");
+
+  //CoAP message Response we set the payload
   int sizeMSG = strlen(coap_payload_beacon);
   coap_set_payload(coap_request, (uint8_t *)coap_payload_beacon, sizeMSG);
 
@@ -125,6 +131,7 @@ coap_beacon_send_response() {
 
   //Note: We don't parse the beacon message yet, so we assume that
   //the node is registered after the first response
+  //TODO: implement State Machine
   is_associated = 1;
 }
 
@@ -225,7 +232,8 @@ PROCESS_THREAD(lorafab_bcn_process, ev, data) {
           if(respond_if_coap_beacon(frame.payload, size) && !is_associated)
           {
             is_beacon_receive = 1;
-            int random_timer = (random_rand()%30);
+            //int random_timer = (random_rand()%30);
+            int random_timer = 1;
             etimer_set(&timer_payload_beacon, random_timer*CLOCK_SECOND);
           }
         }
