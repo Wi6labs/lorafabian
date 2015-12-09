@@ -67,7 +67,7 @@ extern int8_t rx_last_rssi_g;
 
 
 // LoRa default config
-#define RF_FREQUENCY                                870000000 // Hz
+#define RF_FREQUENCY                                868100000 // Hz
 #define TX_OUTPUT_POWER                             14        // dBm
 #define LORA_BANDWIDTH                              1         // [0: 125 kHz,
                                                               //  1: 250 kHz,
