@@ -5,6 +5,8 @@ Warning: At now this method does not support RaspberryPi 2. But we are working o
 - At first you need a "Raspberry Pi to Arduino shields connection bridge" board to connect RPi to the LoRa shield.
 You can order one at http://www.cooking-hacks.com/documentation/tutorials/raspberry-pi-to-arduino-shields-connection-bridge
 
+On this setting IOREF pin is floating on the shield. So you have to connect it to 3V3 with a single wire. Look at "RPi GW IOREF 3V3.jpg" in this github directory for illustration.
+
 - Then install raspbian on your RPi (tested with version "Linux raspberrypi 3.18.7+ #755 PREEMPT Thu Feb 12 17:14:31 GMT 2015 armv6l")
 
 - Install apache and php with commands:
