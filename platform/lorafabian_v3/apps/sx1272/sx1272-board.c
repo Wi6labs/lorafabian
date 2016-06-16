@@ -339,7 +339,9 @@ void EXTI15_10_IRQHandler(void)
   }
 }
 
-
+void SX1272IoIrqDisable( void )
+{
+}
 
 
 
@@ -356,12 +358,12 @@ void SX1272IoIrqEnable( void )
 // Done in SX1272IoInit
 void SX1272IoIrqInit( DioIrqHandler **irqHandlers )
 {
-  ExtiIRQ[0] = irqHandlers[0];
-  ExtiIRQ[1] = irqHandlers[1];
-  ExtiIRQ[2] = irqHandlers[2];
-  ExtiIRQ[3] = irqHandlers[3];
-  ExtiIRQ[4] = irqHandlers[4];
-  ExtiIRQ[5] = irqHandlers[5];
+  ExtiIRQ[DIO0_EXTI_PinSource] = irqHandlers[0];
+  ExtiIRQ[DIO1_EXTI_PinSource] = irqHandlers[1];
+  ExtiIRQ[DIO2_EXTI_PinSource] = irqHandlers[2];
+  ExtiIRQ[DIO3_EXTI_PinSource] = irqHandlers[3];
+  ExtiIRQ[DIO4_EXTI_PinSource] = irqHandlers[4];
+  ExtiIRQ[DIO5_EXTI_PinSource] = irqHandlers[5];
 
 }
 
