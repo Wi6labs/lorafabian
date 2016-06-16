@@ -1,0 +1,61 @@
+APPS_INCLUDE_PATH = $(CONTIKI)/apps/
+
+CFLAGS += -ffunction-sections -I$(APPS_INCLUDE_PATH)
+LDFLAGS += -Wl,--gc-sections,--undefined=_reset_vector__,--undefined=InterruptVectors,--undefined=_copy_data_init__,--undefined=_clear_bss_init__,--undefined=_end_of_init__
+
+# Master clock frequency
+MCK=24000000
+CFLAGS+=-DAUTOSTART_ENABLE
+CFLAGS+=-DSTM32L1XX_MDP
+#CFLAGS+=-DUSE_JTAG_DEBUGGER
+#CFLAGS+=--DLOG_ASSERT
+CFLAGS+=-DHSI_CLK
+
+DEV_FILE = newlib_stub.c
+
+ifeq ($(DFU_BOOTLD_USED),1)
+    CFLAGS+=-DUSE_DFU_BOOTLD
+endif
+
+ifeq ($(USE_UART1_TRACE),1)
+  CFLAGS+=-DUSE_UART1_TRACE
+  DEV_FILE += uart1.c 
+endif 
+           
+
+
+CONTIKI_TARGET_DIRS = . apps dev 
+
+ifeq ($(USE_LORAFAB_RESTART_RX_AFTER_TX),1)
+	CFLAGS+=-DLORAFAB_RESTART_RX_AFTER_TX	
+endif 
+
+ifeq ($(USE_LORA_1272_RADIO),1)
+  APPS_FILE += sx1272.c sx1272-board.c spi.c sx1272_contiki_radio.c
+  CONTIKI_TARGET_DIRS += apps/sx1272
+endif
+
+APPS_FILE +=   arduino_spi.c arduino_cmd.c status_led.c
+CONTIKI_TARGET_DIRS += apps/arduino_interface apps/status_led
+
+
+  ifndef CONTIKI_TARGET_MAIN
+  CONTIKI_TARGET_MAIN = contiki-main.c 
+  endif
+
+CONTIKI_TARGET_SOURCEFILES += $(CONTIKI_TARGET_MAIN) $(APPS_FILE) $(DEV_FILE)
+# include $(CONTIKI)/platform/$(TARGET)/apps/Makefile.apps
+
+include $(CONTIKI)/cpu/arm/stm32l1xx/Makefile.stm32l1xx
+
+#contiki-$(TARGET).a: ${addprefix $(OBJECTDIR)/,symbols.o}
+
+ifeq ($(UIP_CONF_IPV6),1)
+CFLAGS += -DWITH_UIP6=1
+endif
+
+ifndef BASE_IP
+BASE_IP := 172.16.1.1
+endif
+
+MODULES += core/net core/net/mac 
