@@ -12,16 +12,18 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis and Gregory Cristian
 */
-#include "stm32f10x.h"
+#include "stm32l1xx.h"
 #include "sx1272_radio.h"
 #include <misc.h>
 #include "clock.h"
 #include "sx1272.h"
 #include "sx1272-board.h"
-#include "system_stm32f10x.h" 
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_exti.h"
+#include "system_stm32l1xx.h" 
+#include "stm32l1xx_rcc.h"
+#include "stm32l1xx_gpio.h"
+#include "stm32l1xx_exti.h"
+#include "stm32l1xx_syscfg.h"
+#include "misc.h"
 
 /*!
  * Flag used to set the RF switch control pins in low power mode when the radio is not active.
@@ -57,148 +59,179 @@ const struct Radio_s Radio =
 };
 
 /*!
- * SX1272 RESET I/O definitions
- */
-#define RESET_IOPORT                                GPIOC
-#define RESET_PIN                                   GPIO_Pin_7
-
-/*!
- * SX1272 SPI NSS I/O definitions
- */
-#define NSS_IOPORT                                  GPIOA
-#define NSS_PIN                                     GPIO_Pin_4
-
-/*!
- * SX1272 DIO pins  I/O definitions
- */
-#define DIO0_IOPORT                                 GPIOB
-#define DIO0_PIN                                    GPIO_Pin_10
-#define DIO0_PIN_ID                                 10
-#define DIO0_EXTI_Line                              EXTI_Line10
-#define DIO0_EXTI_PinSource                         GPIO_PinSource10
-#define DIO0_EXTI_Port                              GPIO_PortSourceGPIOB
-#define DIO0_IRQn                                   EXTI15_10_IRQn
-
-#define DIO1_IOPORT                                 GPIOB
-#define DIO1_PIN                                    GPIO_Pin_4
-#define DIO1_PIN_ID                                 4
-#define DIO1_EXTI_Line                              EXTI_Line4
-#define DIO1_EXTI_PinSource                         GPIO_PinSource4
-#define DIO1_EXTI_Port                              GPIO_PortSourceGPIOB
-#define DIO1_IRQn                                   EXTI4_IRQn
-
-#define DIO2_IOPORT                                 GPIOB
-#define DIO2_PIN                                    GPIO_Pin_5
-#define DIO2_PIN_ID                                 5
-#define DIO2_EXTI_Line                              EXTI_Line5
-#define DIO2_EXTI_PinSource                         GPIO_PinSource5
-#define DIO2_EXTI_Port                              GPIO_PortSourceGPIOB
-#define DIO2_IRQn                                   EXTI9_5_IRQn
-
-
-#define DIO3_IOPORT                                 GPIOA
-#define DIO3_PIN                                    GPIO_Pin_2
-#define DIO3_PIN_ID                                 2
-#define DIO3_EXTI_Line                              EXTI_Line2
-#define DIO3_EXTI_PinSource                         GPIO_PinSource2
-#define DIO3_EXTI_Port                              GPIO_PortSourceGPIOA
-#define DIO3_IRQn                                   EXTI2_IRQn
-
-
-#define DIO4_IOPORT                                 GPIOA
-#define DIO4_PIN                                    GPIO_Pin_3
-#define DIO4_PIN_ID                                 3
-#define DIO4_EXTI_Line                              EXTI_Line3
-#define DIO4_EXTI_PinSource                         GPIO_PinSource3
-#define DIO4_EXTI_Port                              GPIO_PortSourceGPIOA
-#define DIO4_IRQn                                   EXTI3_IRQn
-
-
-#define DIO5_IOPORT                                 GPIOA
-#define DIO5_PIN                                    GPIO_Pin_1
-#define DIO5_PIN_ID                                 1
-#define DIO5_EXTI_Line                              EXTI_Line1
-#define DIO5_EXTI_PinSource                         GPIO_PinSource1
-#define DIO5_EXTI_Port                              GPIO_PortSourceGPIOA
-#define DIO5_IRQn                                   EXTI1_IRQn
-
-#define RADIO_ANT_SWITCH_HF_PORT                    GPIOB  //CTX
-#define RADIO_ANT_SWITCH_HF_PIN                     GPIO_Pin_6
-
-#define RADIO_ANT_SWITCH_LF_PORT                    GPIOA  //CPS
-#define RADIO_ANT_SWITCH_LF_PIN                     GPIO_Pin_8
-
-#define RXTX_IOPORT                                 GPIOB
-#define RXTX_PIN                                    GPIO_Pin_0
-
-#define ONOFF_LORA_IOPORT                           GPIOC
-#define ONOFF_LORA_PIN                              GPIO_Pin_4
-
-/*!
  * Hardware IO IRQ callback function definition
  */
 typedef void ( EXTIIrqHandler )( void );
 
 static EXTIIrqHandler *ExtiIRQ[15]; 
 
+
+// -----------------------------------------------------------------------------
+// I/O
+
+
+// output lines
+// output lines
+#define NSS_PORT           GPIOA // NSS: PA4
+#define NSS_PIN            GPIO_Pin_4
+
+#define L_FEM_CTX_PORT            GPIOB// CTX:  PB6  
+#define L_FEM_CTX_PIN             GPIO_Pin_6
+#define L_FEM_CPS_PORT            GPIOB // CPS:  PB0  Not used
+#define L_FEM_CPS_PIN             GPIO_Pin_0
+#define RST_PORT           GPIOC // RST: PC7
+#define RST_PIN            GPIO_Pin_7
+
+#define ONOFF_LORA_PORT    GPIOC // PC4
+#define ONOFF_LORA_PIN     GPIO_Pin_4
+
+// input lines
+#define DIO0_PORT           GPIOB // DIO0: PB10   
+#define DIO0_PIN            GPIO_Pin_10
+#define DIO0_EXTI_Line      EXTI_Line10
+#define DIO0_EXTI_PinSource EXTI_PinSource10
+#define DIO0_EXTI_Port      EXTI_PortSourceGPIOB
+#define DIO0_IRQn           EXTI15_10_IRQn
+
+#define DIO1_PORT           GPIOB // DIO1: PB4  
+#define DIO1_PIN            GPIO_Pin_4
+#define DIO1_EXTI_Line      EXTI_Line4
+#define DIO1_EXTI_PinSource EXTI_PinSource4
+#define DIO1_EXTI_Port      EXTI_PortSourceGPIOB
+#define DIO1_IRQn           EXTI4_IRQn
+
+#define DIO2_PORT           GPIOB // DIO2: PB5 
+#define DIO2_PIN            GPIO_Pin_5
+#define DIO2_EXTI_Line      EXTI_Line5
+#define DIO2_EXTI_PinSource EXTI_PinSource5
+#define DIO2_EXTI_Port      EXTI_PortSourceGPIOB
+#define DIO2_IRQn           EXTI9_5_IRQn
+
+#define DIO3_PORT           GPIOA // DIO3: PA2 
+#define DIO3_PIN            GPIO_Pin_2
+#define DIO3_EXTI_Line      EXTI_Line2
+#define DIO3_EXTI_PinSource EXTI_PinSource2
+#define DIO3_EXTI_Port      EXTI_PortSourceGPIOA
+#define DIO3_IRQn           EXTI2_IRQn
+
+#define DIO4_PORT           GPIOA // DIO4: PA3 
+#define DIO4_PIN            GPIO_Pin_3
+#define DIO4_EXTI_Line      EXTI_Line3
+#define DIO4_EXTI_PinSource EXTI_PinSource3
+#define DIO4_EXTI_Port      EXTI_PortSourceGPIOA
+#define DIO4_IRQn           EXTI3_IRQn
+
+#define DIO5_PORT           GPIOA // DIO5: PA1 
+#define DIO5_PIN            GPIO_Pin_1
+#define DIO5_EXTI_Line      EXTI_Line1
+#define DIO5_EXTI_PinSource EXTI_PinSource1
+#define DIO5_EXTI_Port      EXTI_PortSourceGPIOA
+#define DIO5_IRQn           EXTI1_IRQn
+
 void SX1272IoInit( void )
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
 
-	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
-			RCC_APB2Periph_GPIOC , ENABLE ); 
+  GPIO_InitTypeDef GPIO_InitStructure;
+  NVIC_InitTypeDef   NVIC_InitStructure;
+  EXTI_InitTypeDef   EXTI_InitStructure;
 
-	/*ONOFF settings*/
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Pin = ONOFF_LORA_PIN;
-	GPIO_Init( ONOFF_LORA_IOPORT, &GPIO_InitStructure );
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA | RCC_AHBPeriph_GPIOB | RCC_AHBPeriph_GPIOC, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  // OUT config
+  GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
 
-	// Configure NSS as output
-	GPIO_WriteBit( NSS_IOPORT, NSS_PIN, Bit_SET );
-	GPIO_InitStructure.GPIO_Pin = NSS_PIN;
-	GPIO_Init( NSS_IOPORT, &GPIO_InitStructure );
+  GPIO_InitStructure.GPIO_Pin = NSS_PIN;
+  GPIO_Init(NSS_PORT , &GPIO_InitStructure );
+  GPIO_WriteBit(NSS_PORT, NSS_PIN, 0);
 
-	// Configure RESET as output
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_OD;
-	GPIO_InitStructure.GPIO_Pin = RESET_PIN;
-	GPIO_Init( RESET_IOPORT, &GPIO_InitStructure );
+  GPIO_InitStructure.GPIO_Pin = ONOFF_LORA_PIN;
+  GPIO_Init(ONOFF_LORA_PORT , &GPIO_InitStructure );
+  GPIO_WriteBit(ONOFF_LORA_PORT, ONOFF_LORA_PIN, 0);
 
+  // FEM 
+  GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
 
-	// Configure radio DIO as inputs
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Pin = L_FEM_CTX_PIN;
+  GPIO_Init(L_FEM_CTX_PORT , &GPIO_InitStructure );
+  GPIO_WriteBit(L_FEM_CTX_PORT, L_FEM_CTX_PIN, 0);
 
-	// Configure DIO0
-	GPIO_InitStructure.GPIO_Pin =  DIO0_PIN;
-	GPIO_Init( DIO0_IOPORT, &GPIO_InitStructure );
+  // Not used keep default config for the moment
+  //    GPIO_InitStructure.GPIO_Pin = L_FEM_CPS_PIN;
+  //    GPIO_Init(L_FEM_CPS_PORT , &GPIO_InitStructure );
 
-	// Configure DIO1
-	GPIO_InitStructure.GPIO_Pin =  DIO1_PIN;
-	GPIO_Init( DIO1_IOPORT, &GPIO_InitStructure );
+  // IN config
+  GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_IN;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
 
-	// Configure DIO2
-	GPIO_InitStructure.GPIO_Pin =  DIO2_PIN;
-	GPIO_Init( DIO2_IOPORT, &GPIO_InitStructure );
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;  
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 
-	// Configure DIO3 as input
-	GPIO_InitStructure.GPIO_Pin =  DIO3_PIN;
-	GPIO_Init( DIO2_IOPORT, &GPIO_InitStructure );    
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
-	// Configure DIO4 as input
-	GPIO_InitStructure.GPIO_Pin =  DIO4_PIN;
-	GPIO_Init( DIO2_IOPORT, &GPIO_InitStructure );    
+  GPIO_InitStructure.GPIO_Pin = DIO0_PIN;
+  GPIO_Init(DIO0_PORT , &GPIO_InitStructure );
+  SYSCFG_EXTILineConfig(DIO0_EXTI_Port, DIO0_EXTI_PinSource);
 
-	// Configure DIO5 as input
-	GPIO_InitStructure.GPIO_Pin =  DIO5_PIN;
-	GPIO_Init( DIO2_IOPORT, &GPIO_InitStructure );
+  EXTI_ClearFlag(DIO0_EXTI_Line);
+  EXTI_InitStructure.EXTI_Line = DIO0_EXTI_Line;
+  EXTI_Init(&EXTI_InitStructure);
+  NVIC_InitStructure.NVIC_IRQChannel = DIO0_IRQn;
+  NVIC_Init(&NVIC_InitStructure);
 
-	SX1272SetPower(1);
+  GPIO_InitStructure.GPIO_Pin = DIO1_PIN;
+  GPIO_Init(DIO1_PORT , &GPIO_InitStructure );
+  SYSCFG_EXTILineConfig(DIO1_EXTI_Port, DIO1_EXTI_PinSource);
+
+  EXTI_ClearFlag(DIO1_EXTI_Line);
+  EXTI_InitStructure.EXTI_Line = DIO1_EXTI_Line;
+  EXTI_Init(&EXTI_InitStructure);
+  NVIC_InitStructure.NVIC_IRQChannel = DIO1_IRQn;
+  NVIC_Init(&NVIC_InitStructure);
+
+  GPIO_InitStructure.GPIO_Pin = DIO2_PIN;
+  GPIO_Init(DIO2_PORT , &GPIO_InitStructure );
+  SYSCFG_EXTILineConfig(DIO2_EXTI_Port, DIO2_EXTI_PinSource);
+  EXTI_ClearFlag(DIO2_EXTI_Line);
+  EXTI_InitStructure.EXTI_Line = DIO2_EXTI_Line;
+  EXTI_Init(&EXTI_InitStructure);
+  NVIC_InitStructure.NVIC_IRQChannel = DIO2_IRQn;
+  NVIC_Init(&NVIC_InitStructure);
+
+  GPIO_InitStructure.GPIO_Pin = DIO3_PIN;
+  GPIO_Init(DIO3_PORT , &GPIO_InitStructure );
+  SYSCFG_EXTILineConfig(DIO3_EXTI_Port, DIO3_EXTI_PinSource);
+  EXTI_ClearFlag(DIO3_EXTI_Line);
+  EXTI_InitStructure.EXTI_Line = DIO3_EXTI_Line;
+  EXTI_Init(&EXTI_InitStructure);
+  NVIC_InitStructure.NVIC_IRQChannel = DIO3_IRQn;
+  NVIC_Init(&NVIC_InitStructure);
+
+  GPIO_InitStructure.GPIO_Pin = DIO4_PIN;
+  GPIO_Init(DIO4_PORT , &GPIO_InitStructure );
+  SYSCFG_EXTILineConfig(DIO4_EXTI_Port, DIO4_EXTI_PinSource);
+  EXTI_ClearFlag(DIO4_EXTI_Line);
+  EXTI_InitStructure.EXTI_Line = DIO4_EXTI_Line;
+  EXTI_Init(&EXTI_InitStructure);
+  NVIC_InitStructure.NVIC_IRQChannel = DIO4_IRQn;
+  NVIC_Init(&NVIC_InitStructure);
+
+  GPIO_InitStructure.GPIO_Pin = DIO5_PIN;
+  GPIO_Init(DIO5_PORT , &GPIO_InitStructure );
+
+  SX1272SetPower(1);
 }
-
 
 /*INTERRUPT routine*/
 void
@@ -306,201 +339,54 @@ void EXTI15_10_IRQHandler(void)
   }
 }
 
-void SX1272IoIrqDisable( void )
-{
-  NVIC_InitTypeDef   NVIC_InitStructure;
-  EXTI_InitTypeDef   EXTI_InitStructure;
-
-  NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
-  EXTI_InitStructure.EXTI_LineCmd = DISABLE;
-
-  EXTI_InitStructure.EXTI_Line = DIO0_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO0_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  EXTI_InitStructure.EXTI_Line = DIO1_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO1_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  EXTI_InitStructure.EXTI_Line = DIO2_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO2_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  EXTI_InitStructure.EXTI_Line = DIO3_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO3_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  EXTI_InitStructure.EXTI_Line = DIO4_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO4_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  EXTI_InitStructure.EXTI_Line = DIO5_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO5_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-
-}
-void SX1272IoIrqEnable( void )
-{
-  NVIC_InitTypeDef   NVIC_InitStructure;
-  EXTI_InitTypeDef   EXTI_InitStructure;
-
-	// Clear All interrupte pending bits
-    EXTI_ClearITPendingBit(EXTI_Line1);
-    EXTI_ClearITPendingBit(EXTI_Line2);
-    EXTI_ClearITPendingBit(EXTI_Line3);
-    EXTI_ClearITPendingBit(EXTI_Line4);
-    EXTI_ClearITPendingBit(EXTI_Line5);
-    EXTI_ClearITPendingBit(EXTI_Line10);
 
 
-  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;  
-  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
 
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-
-
-  EXTI_InitStructure.EXTI_Line = DIO0_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-	GPIO_EXTILineConfig(DIO0_EXTI_Port, DIO0_EXTI_PinSource);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO0_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-
-  EXTI_InitStructure.EXTI_Line = DIO1_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-	GPIO_EXTILineConfig(DIO1_EXTI_Port, DIO1_EXTI_PinSource);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO1_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-/*  
-	EXTI_InitStructure.EXTI_Line = DIO2_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);	
-	GPIO_EXTILineConfig(DIO2_EXTI_Port, DIO2_EXTI_PinSource);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO2_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  
-	EXTI_InitStructure.EXTI_Line = DIO3_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-	GPIO_EXTILineConfig(DIO3_EXTI_Port, DIO3_EXTI_PinSource);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO3_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  
-	EXTI_InitStructure.EXTI_Line = DIO4_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-	GPIO_EXTILineConfig(DIO4_EXTI_Port, DIO4_EXTI_PinSource);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO4_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-  
-	EXTI_InitStructure.EXTI_Line = DIO5_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-	GPIO_EXTILineConfig(DIO5_EXTI_Port, DIO5_EXTI_PinSource);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO5_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-*/
-}
-
-void SX1272IoIrqInit( DioIrqHandler **irqHandlers )
-{
-
-//  EXTI_InitTypeDef   EXTI_InitStructure;
-//  NVIC_InitTypeDef   NVIC_InitStructure;
-
-  /* Enable SYSCFG clock */
-//  RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
-													RCC_APB2Periph_GPIOC , ENABLE ); 
-
-  ExtiIRQ[DIO0_PIN_ID] = irqHandlers[0];
-  ExtiIRQ[DIO1_PIN_ID] = irqHandlers[1];
-  ExtiIRQ[DIO2_PIN_ID] = irqHandlers[2];
-  ExtiIRQ[DIO3_PIN_ID] = irqHandlers[3];
-  ExtiIRQ[DIO4_PIN_ID] = irqHandlers[4];
-  ExtiIRQ[DIO5_PIN_ID] = irqHandlers[5];
-
-	// Clear All interrupte pending bits
-    EXTI_ClearITPendingBit(EXTI_Line1);
-    EXTI_ClearITPendingBit(EXTI_Line2);
-    EXTI_ClearITPendingBit(EXTI_Line3);
-    EXTI_ClearITPendingBit(EXTI_Line4);
-    EXTI_ClearITPendingBit(EXTI_Line5);
-    EXTI_ClearITPendingBit(EXTI_Line10);
-
-  /*DIO0*/
-  /* Connect EXTI Line to GPIO pin */
-//  SYSCFG_EXTILineConfig(DIO0_EXTI_Port, DIO0_EXTI_PinSource);
-
-#if 0
-  /* Configure EXTI line */
-  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;  
-  EXTI_InitStructure.EXTI_Line = DIO0_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-
-  /* Enable and set EXTI Interrupt to the high priority */
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
-  NVIC_InitStructure.NVIC_IRQChannel = DIO0_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-
-  /*DIO1*/
-//  SYSCFG_EXTILineConfig(DIO1_EXTI_Port, DIO1_EXTI_PinSource);
-  EXTI_InitStructure.EXTI_Line = DIO1_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO1_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-
-  /*DIO2*/
-//  SYSCFG_EXTILineConfig(DIO2_EXTI_Port, DIO2_EXTI_PinSource);
-  EXTI_InitStructure.EXTI_Line = DIO2_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO2_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-
-  /*DIO3*/
-//  SYSCFG_EXTILineConfig(DIO3_EXTI_Port, DIO3_EXTI_PinSource);
-  EXTI_InitStructure.EXTI_Line = DIO3_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO3_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-
-  /*DIO4*/
-//  SYSCFG_EXTILineConfig(DIO4_EXTI_Port, DIO4_EXTI_PinSource);
-  EXTI_InitStructure.EXTI_Line = DIO4_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO4_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-
-
-  /*DIO5*/
-//  SYSCFG_EXTILineConfig(DIO5_EXTI_Port, DIO5_EXTI_PinSource);
-  EXTI_InitStructure.EXTI_Line = DIO5_EXTI_Line;
-  EXTI_Init(&EXTI_InitStructure);
-  NVIC_InitStructure.NVIC_IRQChannel = DIO5_IRQn;
-  NVIC_Init(&NVIC_InitStructure);
-#endif
-}
 
 void SX1272IoDeInit( void )
 {
 
 }
 
+// Done in SX1272IoInit
+void SX1272IoIrqEnable( void )
+{
+}
+
+// Done in SX1272IoInit
+void SX1272IoIrqInit( DioIrqHandler **irqHandlers )
+{
+  ExtiIRQ[0] = irqHandlers[0];
+  ExtiIRQ[1] = irqHandlers[1];
+  ExtiIRQ[2] = irqHandlers[2];
+  ExtiIRQ[3] = irqHandlers[3];
+  ExtiIRQ[4] = irqHandlers[4];
+  ExtiIRQ[5] = irqHandlers[5];
+
+}
+
+
 void SX1272SetReset( uint8_t state )
 {
+  GPIO_InitTypeDef GPIO_InitStructure;
 
-    if( state == RADIO_RESET_ON )
-    {
-			// Set RESET pin to 0
+  // OUT config
+  GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
 
-			GPIO_ResetBits(RESET_IOPORT, RESET_PIN);
-    }
-    else
-    {
-			GPIO_SetBits(RESET_IOPORT, RESET_PIN);
+  GPIO_InitStructure.GPIO_Pin = RST_PIN;
+  GPIO_Init(RST_PORT , &GPIO_InitStructure );
 
-    }
+  if( state == RADIO_RESET_ON )
+  {
+    GPIO_WriteBit(RST_PORT, RST_PIN, 1); 
+  }
+  else
+  {
+    GPIO_WriteBit(RST_PORT, RST_PIN, 0); 
+  }
 }
 
 uint8_t SX1272GetPaSelect( uint32_t channel )
@@ -510,37 +396,10 @@ uint8_t SX1272GetPaSelect( uint32_t channel )
 
 void SX1272SetAntSwLowPower( bool status )
 {
-    if( RadioIsActive != status )
-    {
-        RadioIsActive = status;
-    
-        if( status == FALSE )
-        {
-            SX1272AntSwInit( );
-        }
-        else
-        {
-            SX1272AntSwDeInit( );
-        }
-    }
 }
 
 void SX1272AntSwInit( void )
 {
-  GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
-  // Configure RADIO_ANT_SWITCH_HF
-  GPIO_InitStructure.GPIO_Pin =  RADIO_ANT_SWITCH_HF_PIN;
-  GPIO_Init( RADIO_ANT_SWITCH_HF_PORT, &GPIO_InitStructure );    
-
-  // Configure RADIO_ANT_SWITCH_LF
-  GPIO_InitStructure.GPIO_Pin =  RADIO_ANT_SWITCH_LF_PIN;
-  GPIO_Init( RADIO_ANT_SWITCH_LF_PORT, &GPIO_InitStructure );  
-
-  GPIO_WriteBit( RADIO_ANT_SWITCH_LF_PORT, RADIO_ANT_SWITCH_LF_PIN,  Bit_SET);
-  GPIO_WriteBit( RADIO_ANT_SWITCH_HF_PORT, RADIO_ANT_SWITCH_HF_PIN,  Bit_RESET);
 }
 
 void SX1272AntSwDeInit( void )
@@ -550,23 +409,10 @@ void SX1272AntSwDeInit( void )
 
 void SX1272SetAntSw( uint8_t rxTx )
 {
-  if( SX1272.RxTx == rxTx )
-  {
-      return;
-  }
-
   SX1272.RxTx = rxTx;
 
-  if( rxTx != 0 ) // 1: TX, 0: RX
-  {
-    GPIO_ResetBits( RADIO_ANT_SWITCH_LF_PORT, RADIO_ANT_SWITCH_LF_PIN );
-    GPIO_SetBits( RADIO_ANT_SWITCH_HF_PORT, RADIO_ANT_SWITCH_HF_PIN );
-  }
-  else
-  {
-    GPIO_SetBits( RADIO_ANT_SWITCH_LF_PORT, RADIO_ANT_SWITCH_LF_PIN);
-    GPIO_ResetBits( RADIO_ANT_SWITCH_HF_PORT, RADIO_ANT_SWITCH_HF_PIN);
-  }
+ // 1: TX, 0: RX
+ GPIO_WriteBit(L_FEM_CTX_PORT, L_FEM_CTX_PIN, rxTx);
 }
 
 bool SX1272CheckRfFrequency( uint32_t frequency )
@@ -578,27 +424,19 @@ bool SX1272CheckRfFrequency( uint32_t frequency )
 /*set to 1 (ON) to get switch ON LoRa module*/
 inline void SX1272SetPower( uint8_t onoff )
 {
-  if(onoff == 1) {
-    GPIO_WriteBit( ONOFF_LORA_IOPORT, ONOFF_LORA_PIN,  Bit_SET);
-  } else {
-    GPIO_WriteBit( ONOFF_LORA_IOPORT, ONOFF_LORA_PIN,  Bit_RESET);
-  }
+  GPIO_WriteBit(ONOFF_LORA_PORT, ONOFF_LORA_PIN, onoff);
 }
 
 /*set NSS for SPI*/
 inline void SX1272SetNSS( uint8_t value )
 {
-  if(value == 1) {
-    GPIO_WriteBit( NSS_IOPORT, NSS_PIN,  Bit_SET);
-  } else {
-    GPIO_WriteBit( NSS_IOPORT, NSS_PIN,  Bit_RESET);
-  }
+  GPIO_WriteBit(NSS_PORT, NSS_PIN, value);
 }
 
 /*perform a delay in ms*/
 void DelayMs( uint32_t time_in_ms )
 {
-	  int  counter_ms = 1600*time_in_ms;
+	  uint32_t  counter_ms = 8000*time_in_ms;
 	  while(counter_ms-- > 0) { asm(""); }
 
 }

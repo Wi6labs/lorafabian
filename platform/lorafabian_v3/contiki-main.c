@@ -119,7 +119,7 @@ main()
 
 #ifdef USE_UART1_TRACE
   uart1_init(115200);
-  PRINTD("Starting contiki \n\r");
+  printf("Starting contiki \n\r");
 #endif /*USE_UART1_TRACE*/
 
 #ifdef USE_JTAG_DEBUGGER

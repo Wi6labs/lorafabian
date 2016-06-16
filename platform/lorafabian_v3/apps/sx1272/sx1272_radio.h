@@ -15,7 +15,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #ifndef __RADIO_H__
 #define __RADIO_H__
 
-#include "stm32f10x.h"
+#include "stm32l1xx.h"
 
 /*!
  * Radio driver supported modems
@@ -59,7 +59,7 @@ typedef struct
      *                     FSK : N/A ( set to 0 )
      *                     LoRa: SNR value in dB
      */
-    void    ( *RxDone )( uint8_t *payload, uint16_t size, int8_t rssi, int8_t snr );
+    void    ( *RxDone )( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
     /*!
      * \brief  Rx Timeout callback prototype.
      */
@@ -108,7 +108,7 @@ struct Radio_s
      *
      * \retval isFree         [true: Channel is free, false: Channel is not free]
      */
-    bool    ( *IsChannelFree )( RadioModems_t modem, uint32_t freq, int8_t rssiThresh );
+    bool    ( *IsChannelFree )( RadioModems_t modem, uint32_t freq, int16_t rssiThresh );
     /*!
      * \brief Generates a 32 bits random value based on the RSSI readings
      *
@@ -236,7 +236,7 @@ struct Radio_s
      *
      * \retval rssiValue Current RSSI value in [dBm]
      */
-    int8_t ( *Rssi )( RadioModems_t modem );
+    int16_t ( *Rssi )( RadioModems_t modem );
     /*!
      * \brief Writes the radio register at the specified address
      *

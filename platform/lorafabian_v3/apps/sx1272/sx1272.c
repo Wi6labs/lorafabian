@@ -16,7 +16,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include <stdio.h>
 #include <string.h>
 #include <etimer.h>
-#include "stm32f10x.h"
+#include "stm32l1xx.h"
 #include "spi.h"
 #include "sx1272_radio.h"
 #include "sx1272.h"
@@ -357,9 +357,9 @@ void SX1272SetChannel( uint32_t freq )
     SX1272Write( REG_FRFLSB, ( uint8_t )( freq & 0xFF ) );
 }
 
-bool SX1272IsChannelFree( RadioModems_t modem, uint32_t freq, int8_t rssiThresh )
+bool SX1272IsChannelFree( RadioModems_t modem, uint32_t freq, int16_t rssiThresh )
 {
-    int8_t rssi = 0;
+    int16_t rssi = 0;
     
     SX1272SetModem( modem );
 
@@ -1004,7 +1004,7 @@ void SX1272SetTx( uint32_t timeout )
     SX1272SetOpMode( RF_OPMODE_TRANSMITTER );
 }
 
-int8_t SX1272ReadRssi( RadioModems_t modem )
+int16_t SX1272ReadRssi( RadioModems_t modem )
 {
     int8_t rssi = 0;
 
@@ -1280,7 +1280,7 @@ void SX1272OnDio0Irq( void )
                 break;
             case MODEM_LORA:
                 {
-                    uint8_t snr = 0;
+                    int8_t snr = 0;
 
                     // Clear Irq
                     SX1272Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
@@ -1318,8 +1318,8 @@ void SX1272OnDio0Irq( void )
                         snr = ( SX1272.Settings.LoRaPacketHandler.SnrValue & 0xFF ) >> 2;
                     }
 
-                    int8_t rssi = SX1272Read( REG_LR_PKTRSSIVALUE );
-                    if( SX1272.Settings.LoRaPacketHandler.SnrValue < 0 )
+                    int16_t rssi = SX1272Read( REG_LR_PKTRSSIVALUE );
+                    if( snr < 0 )
                     {
                         SX1272.Settings.LoRaPacketHandler.RssiValue = RSSI_OFFSET + rssi + ( rssi >> 4 ) +
                                                                       snr;

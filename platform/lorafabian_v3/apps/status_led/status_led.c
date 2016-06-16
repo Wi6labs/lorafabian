@@ -119,5 +119,6 @@ void status_led_init( void )
 
 	status_led_rx_on(FALSE);
 	status_led_tx_on(FALSE);
+  status_led_sync_on(FALSE);
 
 }

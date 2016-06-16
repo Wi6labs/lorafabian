@@ -66,7 +66,7 @@ Description: Contiki radio interfec implementation for sx1272
 #include "sx1272.h"
 
 int8_t rx_last_snr_g = 0;
-int8_t rx_last_rssi_g = 0;
+int16_t rx_last_rssi_g = 0;
 
 // Set current params to initial value
 uint8_t lora_current_sf       = LORA_SPREADING_FACTOR;

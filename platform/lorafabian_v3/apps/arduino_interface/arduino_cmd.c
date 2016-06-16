@@ -57,7 +57,7 @@ Description: This process handle the commands send by the Arduino (Except READ a
 AVAILABLE commands which are handled in the SPI interrupt)
 -----------------------------------------------------------------------------*/                                                             
 #include "contiki.h"
-#include "stm32f10x.h"
+#include "stm32l1xx.h"
 #include <stdio.h> /* For printf() */
 #include "sx1272_radio.h"
 #include "sx1272_contiki_radio.h"

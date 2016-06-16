@@ -57,25 +57,32 @@ Description: SPI management for sx1272
 -----------------------------------------------------------------------------*/                                                             
 
 #include <stdint.h>
-#include "stm32f10x_spi.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
+#include "stm32l1xx.h"
+#include "stm32l1xx_spi.h"
+#include "stm32l1xx_rcc.h"
+#include "stm32l1xx_gpio.h"
 #include "spi.h"
+#include <stdio.h>
 
 #define SPI_INTERFACE                               SPI1
 #define SPI_CLK                                     RCC_APB2Periph_SPI1
+#define SPI_AF                                      GPIO_AF_SPI1
 
 #define SPI_PIN_SCK_PORT                            GPIOA
-#define SPI_PIN_SCK_PORT_CLK                        RCC_APB2Periph_GPIOA
+#define SPI_PIN_SCK_PORT_CLK                        RCC_AHBPeriph_GPIOA
 #define SPI_PIN_SCK                                 GPIO_Pin_5
+#define SPI_PIN_SCK_SOURCE                          GPIO_PinSource5
 
 #define SPI_PIN_MISO_PORT                           GPIOA
-#define SPI_PIN_MISO_PORT_CLK                       RCC_APB2Periph_GPIOA
+#define SPI_PIN_MISO_PORT_CLK                       RCC_AHBPeriph_GPIOA
 #define SPI_PIN_MISO                                GPIO_Pin_6
+#define SPI_PIN_MISO_SOURCE                         GPIO_PinSource6
 
 #define SPI_PIN_MOSI_PORT                           GPIOA
-#define SPI_PIN_MOSI_PORT_CLK                       RCC_APB2Periph_GPIOA
+#define SPI_PIN_MOSI_PORT_CLK                       RCC_AHBPeriph_GPIOA
 #define SPI_PIN_MOSI                                GPIO_Pin_7
+#define SPI_PIN_MOSI_SOURCE                         GPIO_PinSource7
+
 
 static bool spi_io_init_done = FALSE;
 
@@ -91,10 +98,17 @@ void SpiInit( void )
                             SPI_PIN_SCK_PORT_CLK, ENABLE );
     RCC_APB2PeriphClockCmd( SPI_CLK, ENABLE );
 
+		// Connect GPIO to Alternate function SPI
+    GPIO_PinAFConfig(SPI_PIN_SCK_PORT,  SPI_PIN_SCK_SOURCE,  SPI_AF);
+    GPIO_PinAFConfig(SPI_PIN_MISO_PORT, SPI_PIN_MISO_SOURCE, SPI_AF);
+    GPIO_PinAFConfig(SPI_PIN_MOSI_PORT, SPI_PIN_MOSI_SOURCE, SPI_AF);
+
 
     /* GPIO configuration ------------------------------------------------------*/
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
 
     GPIO_InitStructure.GPIO_Pin = SPI_PIN_SCK;
     GPIO_Init( SPI_PIN_SCK_PORT, &GPIO_InitStructure );
@@ -102,7 +116,6 @@ void SpiInit( void )
     GPIO_InitStructure.GPIO_Pin = SPI_PIN_MOSI;
     GPIO_Init( SPI_PIN_MOSI_PORT, &GPIO_InitStructure );
 
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_InitStructure.GPIO_Pin = SPI_PIN_MISO;
     GPIO_Init( SPI_PIN_MISO_PORT, &GPIO_InitStructure );
 
@@ -119,7 +132,7 @@ void SpiInit( void )
     SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
     SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
     SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2; // 4MHz
+    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
     SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
     SPI_InitStructure.SPI_CRCPolynomial = 7;
     SPI_Init( SPI_INTERFACE, &SPI_InitStructure );

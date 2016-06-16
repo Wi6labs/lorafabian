@@ -62,7 +62,7 @@ Description: contiki radio interface for sx1272
 extern const struct radio_driver lora_radio_driver;
 
 extern int8_t rx_last_snr_g;
-extern int8_t rx_last_rssi_g;
+extern int16_t rx_last_rssi_g;
 
 extern uint8_t lora_current_sf;
 extern uint8_t lora_current_bw;

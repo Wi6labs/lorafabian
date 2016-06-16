@@ -81,7 +81,7 @@ typedef struct
 typedef struct
 {
     int8_t SnrValue;
-    int8_t RssiValue;
+    int16_t RssiValue;
     uint8_t Size;
 }RadioLoRaPacketHandler_t;
 
@@ -172,7 +172,7 @@ void SX1272SetChannel( uint32_t freq );
  *
  * \retval isFree         [true: Channel is free, false: Channel is not free]
  */
-bool SX1272IsChannelFree( RadioModems_t modem, uint32_t freq, int8_t rssiThresh );
+bool SX1272IsChannelFree( RadioModems_t modem, uint32_t freq, int16_t rssiThresh );
 
 /*!
  * \brief Generates a 32 bits random value based on the RSSI readings
@@ -301,7 +301,7 @@ void SX1272SetRx( uint32_t timeout );
  *
  * \retval rssiValue Current RSSI value in [dBm]
  */
-int8_t SX1272ReadRssi( RadioModems_t modem );
+int16_t SX1272ReadRssi( RadioModems_t modem );
 
 /*!
  * \brief Writes the radio register at the specified address

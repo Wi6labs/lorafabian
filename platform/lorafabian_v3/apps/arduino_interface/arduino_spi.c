@@ -57,34 +57,43 @@ Description: Arduino SPI interface implementation
 -----------------------------------------------------------------------------*/                                                             
 #include <stdint.h>
 #include <stdio.h>
-#include "stm32f10x_spi.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_nvic.h"
+#include "stm32l1xx_spi.h"
+#include "stm32l1xx_rcc.h"
+#include "stm32l1xx_gpio.h"
 #include "contiki.h"
 #include "arduino_spi.h"
 #include "status_led.h"
 #include "sx1272_contiki_radio.h"
+#include "misc.h"
+#include "stm32l1xx_exti.h"
+#include "stm32l1xx_syscfg.h"
 
 #define SPI_INTERFACE                               SPI2
 #define SPI_CLK                                     RCC_APB1Periph_SPI2
 #define SPI_IRQn																		SPI2_IRQn
 
+#define SPI_AF                                      GPIO_AF_SPI2
+
+
 #define SPI_PIN_SCK_PORT                            GPIOB
-#define SPI_PIN_SCK_PORT_CLK                        RCC_APB2Periph_GPIOB
+#define SPI_PIN_SCK_PORT_CLK                        RCC_AHBPeriph_GPIOB
 #define SPI_PIN_SCK                                 GPIO_Pin_13
+#define SPI_PIN_SCK_SOURCE                          GPIO_PinSource13
 
 #define SPI_PIN_MISO_PORT                           GPIOB
-#define SPI_PIN_MISO_PORT_CLK                       RCC_APB2Periph_GPIOB
+#define SPI_PIN_MISO_PORT_CLK                       RCC_AHBPeriph_GPIOB
 #define SPI_PIN_MISO                                GPIO_Pin_14
+#define SPI_PIN_MISO_SOURCE                         GPIO_PinSource14
 
 #define SPI_PIN_MOSI_PORT                           GPIOB
-#define SPI_PIN_MOSI_PORT_CLK                       RCC_APB2Periph_GPIOB
+#define SPI_PIN_MOSI_PORT_CLK                       RCC_AHBPeriph_GPIOB
 #define SPI_PIN_MOSI                                GPIO_Pin_15
+#define SPI_PIN_MOSI_SOURCE                         GPIO_PinSource15
 
 #define SPI_PIN_NSS_PORT                            GPIOB
-#define SPI_PIN_NSS_PORT_CLK                        RCC_APB2Periph_GPIOB
+#define SPI_PIN_NSS_PORT_CLK                        RCC_AHBPeriph_GPIOB
 #define SPI_PIN_NSS                                 GPIO_Pin_12
+#define SPI_PIN_NSS_SOURCE                          GPIO_PinSource12
 
 void arduino_spi_init( void )
 {
@@ -99,13 +108,24 @@ void arduino_spi_init( void )
 
 	/* Enable peripheral clocks --------------------------------------------------*/
 	/* Enable SPIy clock and GPIO clock for SPIy */
-	RCC_APB2PeriphClockCmd( SPI_PIN_MISO_PORT_CLK | SPI_PIN_MOSI_PORT_CLK |
-			SPI_PIN_SCK_PORT_CLK, ENABLE );
+	RCC_AHBPeriphClockCmd( SPI_PIN_MISO_PORT_CLK | SPI_PIN_MOSI_PORT_CLK |
+			SPI_PIN_SCK_PORT_CLK | SPI_PIN_NSS_PORT_CLK, ENABLE );
+
+
+
 	RCC_APB1PeriphClockCmd( SPI_CLK, ENABLE );
 
 	/* GPIO configuration ------------------------------------------------------*/
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  // Connect GPIO to Alternate function SPI
+  GPIO_PinAFConfig(SPI_PIN_SCK_PORT,  SPI_PIN_SCK_SOURCE,  SPI_AF);
+  GPIO_PinAFConfig(SPI_PIN_MISO_PORT, SPI_PIN_MISO_SOURCE, SPI_AF);
+  GPIO_PinAFConfig(SPI_PIN_MOSI_PORT, SPI_PIN_MOSI_SOURCE, SPI_AF);
+  GPIO_PinAFConfig(SPI_PIN_NSS_PORT, SPI_PIN_NSS_SOURCE, SPI_AF);
+
+	GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
+  GPIO_InitStructure.GPIO_OType =   GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd =  GPIO_PuPd_DOWN ;
 
 	GPIO_InitStructure.GPIO_Pin = SPI_PIN_SCK;
 	GPIO_Init( SPI_PIN_SCK_PORT, &GPIO_InitStructure );
@@ -113,10 +133,15 @@ void arduino_spi_init( void )
 	GPIO_InitStructure.GPIO_Pin = SPI_PIN_MOSI;
 	GPIO_Init( SPI_PIN_MOSI_PORT, &GPIO_InitStructure );
 
-	GPIO_InitStructure.GPIO_Pin = SPI_PIN_NSS;
-	GPIO_Init( SPI_PIN_MOSI_PORT, &GPIO_InitStructure );
+  GPIO_InitStructure.GPIO_Pin = SPI_PIN_NSS;
+	GPIO_Init( SPI_PIN_NSS_PORT, &GPIO_InitStructure );
 
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+  // MISO as input by default. Will be activated on interrupt.
+	GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
+  GPIO_InitStructure.GPIO_OType =   GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd =  GPIO_PuPd_NOPULL;
+
 	GPIO_InitStructure.GPIO_Pin = SPI_PIN_MISO;
 	GPIO_Init( SPI_PIN_MISO_PORT, &GPIO_InitStructure );
 
@@ -130,7 +155,7 @@ void arduino_spi_init( void )
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Hard;
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16; // 500kHz
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_128; // 125kHz
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init( SPI_INTERFACE, &SPI_InitStructure );
@@ -155,7 +180,7 @@ void arduino_spi_init( void )
 
 u8 arduino_cmd_buf[ARDUINO_CMD_BUF_MAX_LEN] = {0};
 u16 arduino_cmd_len=0;
-u8 shield_status;
+u8 shield_status = 0;
 u16 lora_data_available = 0 ;
 u8 * arduino_read_buf = NULL;
 u16 arduino_read_buf_len = 0;
@@ -167,11 +192,21 @@ void SPI2_IRQHandler(void)
 	u8 nss = 0;	
 	int i;
 	bool read_error_flag = FALSE;
+	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* DISABLE RXNE interrupt while full message is received */
 	SPI_I2S_ITConfig(SPI_INTERFACE, SPI_I2S_IT_RXNE, DISABLE);
 
 	SPI_I2S_SendData(SPI_INTERFACE, shield_status);
+
+  // Activate MISO
+	GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
+    GPIO_InitStructure.GPIO_OType =   GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd =  GPIO_PuPd_DOWN ;
+
+	GPIO_InitStructure.GPIO_Pin = SPI_PIN_MISO;
+	GPIO_Init( SPI_PIN_MISO_PORT, &GPIO_InitStructure );
 
 	// init len
 	arduino_cmd_len=0;
