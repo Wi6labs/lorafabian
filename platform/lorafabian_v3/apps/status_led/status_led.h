@@ -58,8 +58,8 @@ Description: Status led interface
 #ifndef __STATUS_LED_H__
 #define __STATUS_LED_H__
 
+void status_led_init( void );
 void status_led_rx_on(bool on);
 void status_led_tx_on(bool on);
-void status_led_init( void );
-
+void status_led_sync_on(bool on);
 #endif // __STATUS_LED_H__ 

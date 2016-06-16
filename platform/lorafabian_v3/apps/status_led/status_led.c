@@ -57,17 +57,21 @@ Description: Status led init and set functions.
 -----------------------------------------------------------------------------*/                                                             
 #include <stdint.h>
 #include <stdio.h>
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
+#include "stm32l1xx_rcc.h"
+#include "stm32l1xx_gpio.h"
 
 
 #define STATUS_LED_TX_PORT					GPIOC
-#define STATUS_LED_TX_PORT_CLK			RCC_APB2Periph_GPIOC
+#define STATUS_LED_TX_PORT_CLK			RCC_AHBPeriph_GPIOC
 #define STATUS_LED_TX_PIN						GPIO_Pin_8
 
 #define STATUS_LED_RX_PORT					GPIOC
-#define STATUS_LED_RX_PORT_CLK			RCC_APB2Periph_GPIOC
+#define STATUS_LED_RX_PORT_CLK			RCC_AHBPeriph_GPIOC
 #define STATUS_LED_RX_PIN						GPIO_Pin_9
+
+#define STATUS_LED_SYNC_PORT        GPIOC
+#define STATUS_LED_SYNC_PORT_CLK    RCC_AHBPeriph_GPIOC
+#define STATUS_LED_SYNC_PIN         GPIO_Pin_10
 
 void status_led_tx_on(bool on){
 	if (on)
@@ -83,22 +87,35 @@ void status_led_rx_on(bool on){
 		GPIO_SetBits(STATUS_LED_RX_PORT, STATUS_LED_RX_PIN);
  }
 
+void status_led_sync_on(bool on){
+	if (on)
+		GPIO_ResetBits(STATUS_LED_SYNC_PORT, STATUS_LED_SYNC_PIN);
+	else
+		GPIO_SetBits(STATUS_LED_SYNC_PORT, STATUS_LED_SYNC_PIN);
+ }
+
+
 
 void status_led_init( void )
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
-	RCC_APB2PeriphClockCmd( STATUS_LED_TX_PORT_CLK | STATUS_LED_RX_PORT_CLK, ENABLE );
+	RCC_AHBPeriphClockCmd( STATUS_LED_TX_PORT_CLK | STATUS_LED_RX_PORT_CLK, ENABLE );
 
 	/* GPIO configuration ------------------------------------------------------*/
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
 
 	GPIO_InitStructure.GPIO_Pin = STATUS_LED_TX_PIN;
 	GPIO_Init( STATUS_LED_TX_PORT, &GPIO_InitStructure );
 
 	GPIO_InitStructure.GPIO_Pin = STATUS_LED_RX_PIN;
 	GPIO_Init( STATUS_LED_RX_PORT, &GPIO_InitStructure );
+
+	GPIO_InitStructure.GPIO_Pin = STATUS_LED_SYNC_PIN;
+	GPIO_Init( STATUS_LED_SYNC_PORT, &GPIO_InitStructure );
 
 	status_led_rx_on(FALSE);
 	status_led_tx_on(FALSE);
