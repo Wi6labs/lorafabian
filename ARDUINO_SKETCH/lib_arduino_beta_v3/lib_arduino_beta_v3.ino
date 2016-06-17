@@ -6,7 +6,7 @@ void setup() {
   // Advanced LoRa user parameters :
 
   // frequency
-//  LoRa_freq(868100000);
+  //LoRa_freq(868100000);
   
   // Spreading factor
   // LoRa_SF(12);      // [7: SF7,
@@ -34,16 +34,16 @@ void setup() {
   Serial.begin(9600);
 
 }
-/*
+
 // Send Example
 void loop () {
   LoRa_send("hehehe");
 
   delay(10000);
 }
-*/
 
 
+/*
 // Receive example
 void loop () {
   int avail;
@@ -71,4 +71,4 @@ void loop () {
   delay(100);
 }
 
-
+*/
