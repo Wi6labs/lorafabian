@@ -289,12 +289,25 @@ void SPI2_IRQHandler(void)
 	else if (cmd == ARDUINO_CMD_AVAILABLE){
 		SPI_I2S_SendData(SPI_INTERFACE, ARDUINO_CMD_STATUS_OK );
 	}
+  else if (cmd == ARDUINO_CMD_LAST_SNR || cmd == ARDUINO_CMD_LAST_RSSI) {
+    // do nothing
+  }
 	else {
 		process_poll(&arduino_cmd_process);
 
 		// Preload No status for last command, set_last_cmd_status must be called at the end of the command to set the status 	
 		SPI_I2S_SendData(SPI_INTERFACE, ARDUINO_CMD_STATUS_NO_STATUS );
 	}
+
+  // MISO as input by default. Will be activated on interrupt.
+	GPIO_InitStructure.GPIO_Mode =  GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_40MHz;
+  GPIO_InitStructure.GPIO_OType =   GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd =  GPIO_PuPd_NOPULL;
+
+	GPIO_InitStructure.GPIO_Pin = SPI_PIN_MISO;
+	GPIO_Init( SPI_PIN_MISO_PORT, &GPIO_InitStructure );
+
 
 	/* Enable interrupt */
 	SPI_I2S_ITConfig(SPI_INTERFACE, SPI_I2S_IT_RXNE, ENABLE);
