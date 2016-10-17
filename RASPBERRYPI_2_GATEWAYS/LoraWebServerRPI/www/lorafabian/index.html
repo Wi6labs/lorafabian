@@ -46,7 +46,7 @@ function myFunctionSend()
   var xhr = new XMLHttpRequest();
   
   // build URL with a parameter
-  var url = "send.php?command=LoraFabian:"+msg.value;
+  var url = "send.php?command="+msg.value;
   
   // use parameter type GET
   xhr.open("GET", url, true);

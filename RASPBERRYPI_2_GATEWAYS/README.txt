@@ -24,7 +24,7 @@ sudo apt-get install php5
 lorafabian/ into /home/pi
 www/lorafabian/ into /var/www
 
-Warning: Be careful of access rights given to www/ because you will access from /home/pi
+Warning: Be careful of access rights given to www/ and www/lorafabian  because you will access from /home/pi
 Perform the following command to give full access: sudo chmod 777 www 
 
 - Compile the gateway software running the following script
