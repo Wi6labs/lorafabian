@@ -46,9 +46,6 @@ The default channel is:
 
 Every Froggy Factory LoRa shield are configured by default with this setup.
 
-To discard messages from other networks, input packet are filtered.
-Only message starting with "LoraFabian:" will be received by this gateway.
-
 There is a web server running on the RPi. You can access it on your local network with the link:
 192.168.xxx.xxx/lorafabian
 
