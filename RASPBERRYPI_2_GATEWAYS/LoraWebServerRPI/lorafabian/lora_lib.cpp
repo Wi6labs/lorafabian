@@ -56,11 +56,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "arduPi.h"
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
- #include <arpa/inet.h>
+#include "lora_lib.h"
 
 const int slaveSelectPin = 10;
 const byte ResetPin          = 5; 
@@ -76,9 +72,6 @@ void LoRa_init() {
   // Let it wake up
   delay(500);
 
-  // Set NSS to high
-  pinMode (slaveSelectPin, OUTPUT);
-  digitalWrite(slaveSelectPin,HIGH);
 
   // initialize SPI:
   SPI.begin();
@@ -86,13 +79,42 @@ void LoRa_init() {
   SPI.setDataMode(SPI_MODE0) ;
   SPI.setClockDivider(SPI_CLOCK_DIV2048); // 125kHz
 
+  // Set NSS to high
+  pinMode (slaveSelectPin, OUTPUT);
+  digitalWrite(slaveSelectPin,HIGH);
+
+
   // Wait SPI to be ready
   delay(500);
+
+  // Switch shield to Froggy mode
+  digitalWrite(slaveSelectPin,LOW);
+
+  //  send data
+  SPI.transfer(0xF0);
+  delay(2);
+  SPI.transfer(0x00);
+  delay(2);
+  SPI.transfer(0x00);
+  delay(2);
+  SPI.transfer(0x00);
+  delay(2);
+  
+  // take the SS pin high to de-select the chip:
+  digitalWrite(slaveSelectPin,HIGH); 
+ 
+  delay(1000);
+
+  // Fake Command with no effect to flush SPI
+  LoRa_last_rssi();
+  
+  delay(200);
+
 }
 
-void LoRa_send(unsigned char *in, int len) {
-
- digitalWrite(slaveSelectPin,LOW);
+void LoRa_send(char *in, short len) {
+//  printf("send: %s, len %d\n", in, len);
+  digitalWrite(slaveSelectPin,LOW);
   delay(1);
 
   //  send data

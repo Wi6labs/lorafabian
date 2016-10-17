@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __LORA_LIB_H__
 
 void LoRa_init();
-void LoRa_send(unsigned char *in, int len);
+void LoRa_send(char *in, short len);
 int LoRa_available();
 char LoRa_read();
 void LoRa_RF_config(int in);
