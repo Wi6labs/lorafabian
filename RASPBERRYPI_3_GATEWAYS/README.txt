@@ -1,4 +1,4 @@
-This document explains how to create a LoRa gateway with a RaspberryPi 2 and a Froggy Factory LoRa shield.
+This document explains how to create a LoRa gateway with a RaspberryPi 3 and a Froggy Factory LoRa shield.
 
 
 - At first you need a "Raspberry Pi to Arduino shields connection bridge" board to connect RPi to the LoRa shield.
@@ -6,13 +6,11 @@ You can order one at http://www.cooking-hacks.com/documentation/tutorials/raspbe
 
 On this setting IOREF pin is floating on the shield. So you have to connect it to 3V3 with a single wire. Look at "RPi GW IOREF 3V3.jpg" in this github directory for illustration.
 
-- Then install raspbian on your RPi (tested with version "Linux raspberrypi 4.1.19-v7+ #858 SMP Tue Mar 15 15:56:00 GMT 2016 armv7l GNU/Linux")
+- Then install raspbian on your RPi (tested with version "Linux raspberrypi 4.4.21-v7+ #911 SMP Thu Sep 15 14:22:38 BST 2016 armv7l GNU/Linux")
 
 - Enable SPI with command: sudo raspi-config
-  8 Advanced Options > A6 SPI > 
+  9 Advanced Options > A6 SPI > 
      Would you like the SPI interface to be enabled? > Yes
-     Would you like the SPI kernel module to be loaded by  default? > Yes
-  You must reboot after that.
   for more info about SPI activation: https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md
 
 - Install apache and php with commands:
@@ -22,10 +20,10 @@ sudo apt-get install php5
 
 - Then copy reference project LoraWebServerRPI/ on your Rpi
 lorafabian/ into /home/pi
-www/lorafabian/ into /var/www
+www/lorafabian/ into /var/www/html
 
-Warning: Be careful of access rights given to www/ and www/lorafabian  because you will access from /home/pi
-Perform the following commands to give full access: sudo chmod 777 /var/www;  sudo chmod 777 /var/www/lorafabian; sudo chmod 777 /var/www/lorafabian/*; 
+Warning: Be careful of access rights given to www/ and www/html/lorafabian  because you will access from /home/pi
+Perform the following commands to give full access: sudo chmod 777 /var/www;  sudo chmod 777 /var/www/html; sudo chmod 777 /var/www/html/lorafabian;  sudo chmod 777 /var/www/html/lorafabian/*; 
 
 - Give exectution right to Gateway compilation script:
 chmod 777 ~/lorafabian/compile.sh
