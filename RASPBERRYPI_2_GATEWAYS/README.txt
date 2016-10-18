@@ -25,7 +25,7 @@ lorafabian/ into /home/pi
 www/lorafabian/ into /var/www
 
 Warning: Be careful of access rights given to www/ and www/lorafabian  because you will access from /home/pi
-Perform the following command to give full access: sudo chmod 777 www 
+Perform the following commands to give full access: sudo chmod 777 /var/www;  sudo chmod 777 /var/www/lorafabian; sudo chmod 777 /var/www/lorafabian/*; 
 
 - Compile the gateway software running the following script
 ~/lorafabian/compile.sh
