@@ -24,6 +24,8 @@ void LoRa_init() {
 
   // Wait SPI to be ready
   delay(500);
+
+  switch_to_froggy_mode();
 }
 
 void LoRa_send(String in) {
@@ -311,4 +313,33 @@ void LoRa_TX_Power(int in) {
 
   delay(100);
 } 
+
+// Function to switch LoRaWan Froggy board to LoRa mode
+// Have no effect with a LoRa board
+void switch_to_froggy_mode() {
+
+// Switch shield to Froggy mode
+  digitalWrite(slaveSelectPin,LOW);
+
+  //  send data
+  SPI.transfer(0xF0);
+  delay(2);
+  SPI.transfer(0x00);
+  delay(2);
+  SPI.transfer(0x00);
+  delay(2);
+  SPI.transfer(0x00);
+  delay(2);
+  
+  // take the SS pin high to de-select the chip:
+  digitalWrite(slaveSelectPin,HIGH); 
+ 
+  delay(1000);
+
+  // Fake Command with no effect to flush SPI
+  LoRa_last_rssi();
+  
+  delay(200);
+
+}
 

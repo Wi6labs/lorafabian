@@ -96,7 +96,7 @@ void checkRequest() {
     timeinfo = localtime ( &rawtime );
     printf ( "\n%s", asctime (timeinfo) );
     printf("Send Lora msg : \"%s\"\n",str);
-    LoRa_send(str, strlen(str) - 1 );
+    LoRa_send(str, strlen(str) );
 
   }
 }
