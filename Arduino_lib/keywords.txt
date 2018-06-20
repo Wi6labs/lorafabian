@@ -21,8 +21,8 @@ lora_send	KEYWORD2
 lora_read	KEYWORD2
 lora_getSnr	KEYWORD2
 lora_getRssi	KEYWORD2
-lora_getFreq KEYWORD2
-lora_getRFConf KEYWORD2
+lora_getFreq	KEYWORD2
+lora_getRFConf	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
